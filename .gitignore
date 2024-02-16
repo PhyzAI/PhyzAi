@@ -1,0 +1,6 @@
+questions/
+answers/
+__pycache__/
+audiofile.wav
+.vs/
+build/
