@@ -15,6 +15,7 @@ import winsound # make beeping noises
 import time
 import serial
 import whisper
+import re
 
 # Key for the openAI API - this is set as an environment variable: 
 # https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
@@ -105,30 +106,41 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
     else:
         print("asking")
         print(currentSerial)
-        start_time = time.perf_counter()
-        response = openai.ChatCompletion.create(
-            # Select the model to answer the question. 3.5 is cheap and fast. 
-            # 4 would offer better answers, but is much more expensive.
-            model="gpt-3.5-turbo",
+        response = ''
 
-            # Set the personality of the bot. The 'system' role tells the bot who it is.
-            # The 'user' role is the question the user has asked.
-            messages= [
-                {"role":"system",
-                    "content":prompt},
-                {"role":"user","content":question}
-            ]
-        )
-        
-        end_time = time.perf_counter()
-        print(f"Total request duration: {end_time-start_time} seconds")
+        if question.count('Say') >= 1:
+            print("Skipping gpt")
+            regexp = re.compile("Say(.*)")
+            toSay = regexp.search(question).group(1)
+            print(toSay)
+             
+
+        else:
+            start_time = time.perf_counter()
+            response = openai.ChatCompletion.create(
+                # Select the model to answer the question. 3.5 is cheap and fast. 
+                # 4 would offer better answers, but is much more expensive.
+                model="gpt-3.5-turbo",
+
+                # Set the personality of the bot. The 'system' role tells the bot who it is.
+                # The 'user' role is the question the user has asked.
+                messages= [
+                    {"role":"system",
+                        "content":prompt},
+                    {"role":"user","content":question}
+                ]
+            )
+            
+            end_time = time.perf_counter()
+            print(f"Total request duration: {end_time-start_time} seconds")
+            toSay = response['choices'][0]['message']['content']
+
 
         # If you set the DEBUG flag to True, it will print the whole response here.
         # This is useful for seeing how many tokens the response cost.
         if DEBUG:
             print(response)
 
-        toSay = response['choices'][0]['message']['content']
         #await asyncio.sleep(10)
         print("got answer")
         slowTaskComplete = True

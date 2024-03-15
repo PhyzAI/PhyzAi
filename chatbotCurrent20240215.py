@@ -83,14 +83,8 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
     #print("before AI")
     # Open a request to openai
     print("actually asking")
-    frequency = random.randint(200, 1000) # Set Frequency To 2500 Hertz
-    duration = 100 # Set Duration To 1000 ms == 1 second
-    winsound.Beep(frequency, duration)
-    await asyncio.sleep(1)
-    frequency = random.randint(200, 1000) # Set Frequency To 2500 Hertz
-    duration = 100 # Set Duration To 1000 ms == 1 second
-    winsound.Beep(frequency, duration)
     currentSerial = serialObj.read().decode('ascii')
+    print("current serial: " + currentSerial)
     #if (serialObj.read().decode('ascii') == '3'):
     if (currentSerial == '3'):
         print("that was bad")
@@ -125,10 +119,10 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
             print(response)
 
         toSay = response['choices'][0]['message']['content']
-        #await asyncio.sleep(10)
+        await asyncio.sleep(0)
         print("got answer")
         slowTaskComplete = True
-        #print("slow task complete")
+        print("slow task complete")
 
 async def beeps():
     global slowTaskComplete
@@ -137,7 +131,7 @@ async def beeps():
     duration = random.randint(10, 1000) # Set Duration To 1000 ms == 1 second
     winsound.Beep(frequency, duration)
 
-    while True:
+    while not slowTaskComplete:
         print("in loop beeps before sleep")
         print("in loop beeps")
         frequency = random.randint(400, 800) # Set Frequency To 2500 Hertz
@@ -159,11 +153,22 @@ async def askWithWait():
     startTime = time.time()
     attempt = 1
     slowTask = asyncio.create_task(ask(recognised_speech))
+    #asyncio.create_task(beeps())
     while not slowTaskComplete:
+        frequency = random.randint(400, 800) # Set Frequency To 2500 Hertz
+        duration = 50 # Set Duration To 1000 ms == 1 second
+        winsound.Beep(frequency, duration)
+        frequency = random.randint(400, 800) # Set Frequency To 2500 Hertz
+        winsound.Beep(frequency, duration)
+        frequency = random.randint(400, 800) # Set Frequency To 2500 Hertz
+        winsound.Beep(frequency, duration)
+        frequency = random.randint(400, 800) # Set Frequency To 2500 Hertz
+        winsound.Beep(frequency, duration)
         await asyncio.sleep(0)
         #print(time.time() - startTime)
         #print(slowTaskComplete)
         if slowTaskComplete:
+            await asyncio.sleep(3)
             break
         elif (time.time() - startTime) >= timeWait:
             apologize()
@@ -218,7 +223,6 @@ def speak(text: str) -> None:
     # Select the voice to use and pass it the text to read.
     # get todays date
     today = datetime.date.today()
-
     now = datetime.datetime.now()
     timeString = now.strftime("%H:%M:%S")
 
@@ -237,11 +241,9 @@ def speak(text: str) -> None:
         # appending data
         current_data = [today, timeString, text]
         csv_writer.writerow(current_data)
-    
-    # time.sleep(0)
+
 # Bahadir digital out for mouth
     #serialObj.write(8, HIGH)
-
     engine.say(text)
     engine.runAndWait()
     engine.stop()
@@ -343,7 +345,7 @@ def listen(OVERRIDE=False) -> None:
 
     # Recognise the speech using Whisper API
     try:
-        # Send the audio from speech recognition to the Whisper API
+        # Send the audio from speech recognition to the Whisper API 
         print("before whisper")
         with open('audioFile.wav', 'wb') as file:
             file.write(audio.get_wav_data())
@@ -400,9 +402,8 @@ if __name__ == "__main__":
     loadInnapropriate()
     #try:
     print("Welcome to Phyz AI, press 4 to ask a question or 5 to stop the question and 3 to leave")
-#Bahadir debug
+    #Bahadir debug
     print("Bahadir 1.8")
-
 
     while True:
         controller()
