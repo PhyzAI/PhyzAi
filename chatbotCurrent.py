@@ -108,13 +108,23 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
         print(currentSerial)
         response = ''
 
-        if question.count('Say') >= 1:
+        # Say Speech Function
+        if question.startswith('Say'):
             print("Skipping gpt")
             regexp = re.compile("Say(.*)")
             toSay = regexp.search(question).group(1)
             print(toSay)
              
+        # Phyz Please ...... speech functions
+        elif question.startswith('Fizz please'):
+            print("Skipping GPT")
+            speechPrompt =  re.compile("Fizz please(.*)").search(question).group(1)
+            if speechPrompt.contains('introduce yourself'):
+                toSay = "Hi I'm PhyzAi"
+            elif speechPrompt.contains('dad joke'):
+                print ("Picks a predetermined dad joke from a list")
 
+        # Run ChatGPT response
         else:
             start_time = time.perf_counter()
             response = openai.ChatCompletion.create(
