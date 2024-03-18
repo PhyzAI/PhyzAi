@@ -219,8 +219,14 @@ def controller():
         print("in 4")
         print("saw button press")
         listen()
+
+#Bahadir 20240317 - stop answering if 3 is pressed
         if(stopped == True):
             stopped = False
+	elif (serialObj.read().decode('ascii') == '3'):
+            print("in 3")
+            print("saying response to innapropriate question")
+            thatwasbad()
         else:
             speak(toSay)
     elif (serialObj.read().decode('ascii') == '5'):
@@ -282,8 +288,7 @@ def speak(text: str) -> None:
     inSpeaking = False
     return
 
-
-# load the dad jokes from the file
+#Bahadir 20240317 - load the dad jokes from the file
 def loadDadJokes():
     global dadJokes
 
@@ -359,8 +364,7 @@ def leavingNow():
     speak("I hope to see you all again soon, make sure to come check out my website and follow me on social media!")
     #print(joke)
 
-
-# tell a dad joke
+#Bahadir 20240317 - tell a dad joke
 def sayDadJoke():
     global dadJokes
 
