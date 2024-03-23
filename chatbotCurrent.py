@@ -31,6 +31,8 @@ whisperModel = whisper.load_model("tiny.en")
 # init apologies
 apologies = []
 
+dadJokes = []
+
 # init mechanical errors
 leaving = []
 
@@ -97,7 +99,7 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
     winsound.Beep(frequency, duration)
     currentSerial = serialObj.read().decode('ascii')
     #if (serialObj.read().decode('ascii') == '3'):
-    if (currentSerial == '3'):
+    if (currentSerial == '5'):
         print("that was bad")
         thatwasbad()
         toSay = ""
@@ -106,6 +108,8 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
     else:
         print("asking")
         print(currentSerial)
+        question = question.lstrip()
+        print(question)
         response = ''
 
         # Say Speech Function
@@ -114,18 +118,21 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
             regexp = re.compile("Say(.*)")
             toSay = regexp.search(question).group(1)
             print(toSay)
-             
-        # Phyz Please ...... speech functions
-        elif question.startswith('Fizz please'):
+            
+        # # Phyz Please ...... speech functions
+        elif question.lower().startswith('fizz please') or question.lower().startswith('fizz, please') or question.lower().startswith('this, please'):
             print("Skipping GPT")
-            speechPrompt =  re.compile("Fizz please(.*)").search(question).group(1)
-            if speechPrompt.contains('introduce yourself'):
-                toSay = "Hi I'm PhyzAi"
-            elif speechPrompt.contains('dad joke'):
-                print ("Picks a predetermined dad joke from a list")
+            # speechPrompt =  re.compile("Fizz please(.*)").search(question).group(1)
+            if "introduce yourself" in question.lower():
+                toSay = "Hi I'm Fizz AI, I really really loooovvvee Bahadir mwah XOXO"
+        
+        elif "dad joke" in question.lower() or "bad joke" in question.lower():
+            print ("Picks a predetermined dad joke from a list")
+            toSay = getDadJoke()
 
         # Run ChatGPT response
         else:
+            print("Asking ChatGPT")
             start_time = time.perf_counter()
             response = openai.ChatCompletion.create(
                 # Select the model to answer the question. 3.5 is cheap and fast. 
@@ -211,28 +218,35 @@ def controller():
     global stopped
 
     serialObj.timeout = None
+    serialData = serialObj.read().decode('ascii')
 
     #if (serialObj.inWaiting() > 0):
     #print(serialObj.read().decode('ascii'))
-    if (serialObj.read().decode('ascii') == '4'):
+    if (serialData == '4'):
         print("in 4")
         print("saw button press")
         listen()
-        if(stopped == True):
-            stopped = False
-        else:
-            speak(toSay)
-    elif (serialObj.read().decode('ascii') == '5'):
+
+    #Bahadir 20240317 - stop answering if 3 is pressed
+    if(stopped == True):
+        stopped = False
+    elif (serialData == '3'):
+        print("in 3")
+        print("saying response to innapropriate question")
+        thatwasbad()
+    elif (serialData == '5'):
         print("in 5")
         print("saying leaving response")
         leavingNow()
-    elif (serialObj.read().decode('ascii') == '3'):
+    elif (serialData == '3'):
         if(firstInnapropriate == False):  
             print("in 3")
             print("saying response to innapropriate question")
             thatwasbad()
         else:
             firstInnapropriate = False
+    else:
+        speak(toSay)
 
 # This function plays the output we get back from the API.
 def speak(text: str) -> None:
@@ -281,6 +295,15 @@ def speak(text: str) -> None:
     inSpeaking = False
     return
 
+#Bahadir 20240317 - load the dad jokes from the file
+def loadDadJokes():
+
+    with open("dadJokes.txt", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    for l in lines:
+        dadJokes.append(l.split("<>"))
+
 # load the apologies from the file
 def loadApologies():
     global apologies
@@ -291,7 +314,7 @@ def loadApologies():
     for l in lines:
         apologies.append(l.split("<>"))
 
-# load the apologies from the file
+# load the leaving from the file
 def loadleaving():
     global leaving
 
@@ -334,7 +357,7 @@ def thatwasbad():
     speak(dontaskthat)
     #print(joke)
 
-# say a random dad joke
+# say leaving joke
 def leavingNow():
     global leaving
 
@@ -346,6 +369,18 @@ def leavingNow():
     speak(left)
     speak("I hope to see you all again soon, make sure to come check out my website and follow me on social media!")
     #print(joke)
+
+#Bahadir 20240317 - tell a dad joke
+def getDadJoke():
+
+    print("Dad joke!")
+    random_dadJoke = random.randint(0, len(dadJokes)-1)
+
+    oneDadJoke = "".join(dadJokes[random_dadJoke])
+
+    return oneDadJoke
+    # speak(oneDadJoke)
+    # print(oneDadJoke)
 
 # This is the main loop of the program. It listens for the user to say something, then sends it to the API.
 def listen(OVERRIDE=False) -> None:
@@ -427,6 +462,7 @@ if __name__ == "__main__":
     loadApologies()
     loadleaving()
     loadInnapropriate()
+    loadDadJokes()
     #try:
     print("Welcome to Phyz AI, press 4 to ask a question or 5 to stop the question and 3 to leave")
 #Bahadir debug
