@@ -6,7 +6,6 @@ class SpeechSynthesis:
         self._engine = pyttsx3.init()
         self._jokes = []
 
-
     def setProperty(self, key: str, value):
         self._engine.setProperty(key, value)
 

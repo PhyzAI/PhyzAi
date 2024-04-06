@@ -16,6 +16,7 @@ import time
 import serial
 import whisper
 import re
+import threading
 
 # Key for the openAI API - this is set as an environment variable: 
 # https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
@@ -64,6 +65,13 @@ firstListen = True
 firstExit = True
 firstInnapropriate = True
 
+# All the Threads
+background_tasks = set()
+
+# Conditions for multithreading
+isListening = False
+killSwitchOn = False
+
 # This function is the core of the chatbot. It sets the personality for the bot, and sends the question to openAI.
 async def ask(question: str, DEBUG=False, OVERRIDE=False):
     global toSay
@@ -73,9 +81,9 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
     slowTaskComplete = False
     serialObj.timeout = 0
 
-# Bahadir digital out for mouth
-#    serialObj.pinMode(8, OUTPUT)
-#    serialObj.digitalWrite(8, HIGH)
+    # Bahadir digital out for mouth
+    #    serialObj.pinMode(8, OUTPUT)
+    #    serialObj.digitalWrite(8, HIGH)
 
 
     """Sends a question to the openAI API and returns the answer. Set OVERRIDE to True to override constraints on the answer."""
@@ -166,6 +174,7 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
 async def beeps():
     global slowTaskComplete
     print("in beeps")
+    
     frequency = random.randint(400, 800) # Set Frequency To 2500 Hertz
     duration = random.randint(10, 1000) # Set Duration To 1000 ms == 1 second
     winsound.Beep(frequency, duration)
@@ -383,7 +392,7 @@ def getDadJoke():
     # print(oneDadJoke)
 
 # This is the main loop of the program. It listens for the user to say something, then sends it to the API.
-def listen(OVERRIDE=False) -> None:
+async def listen(OVERRIDE=False) -> None:
     """Listens for audio and calls other functions to fetch and play a response."""
     # Obtain audio from the microphone using the speech recognition library
     # Create a listener object
@@ -454,6 +463,76 @@ def listen(OVERRIDE=False) -> None:
     except sr.RequestError as e:
         print("Could not request results from Whisper API")
 
+    # no longer listening
+    isListening = False
+
+
+# Function to handle the button reading loop
+def buttonHandler():
+    while True:
+        # print("Checking Buttons")
+
+        serialObj.timeout = None
+        serialData = serialObj.read().decode('ascii')
+        print("Recieved %i" % serialData)
+
+        """
+        3 = NC
+        4 = Listen for user input
+        5 = NC
+        6 = Kill Switch
+        """
+
+        match serialData:
+            case '3':
+                pass
+            case '4':
+                # Start Listening
+                asyncio.run(listen())
+
+                # Create a task to listen for input and add it to the background task queue (Automatically scheduels for execution)
+                listenerTask = asyncio.create_task(listen())
+                background_tasks.add(listenerTask) # Add task to the set. This creates a strong reference.
+                listenerTask.add_done_callback(background_tasks.discard) # Setup callback to remove the task from the list once its done
+
+                isListening = True
+                pass
+            case '5':
+                pass
+            case '6':
+                killSwitchOn = True
+                pass
+
+
+        #if (serialObj.inWaiting() > 0):
+        #print(serialObj.read().decode('ascii'))
+        # if (serialData == '4'):
+        #     print("in 4")
+        #     print("saw button press")
+        #     listen()
+
+        #Bahadir 20240317 - stop answering if 3 is pressed
+        if(stopped == True):
+            stopped = False
+        elif (serialData == '3'):
+            print("in 3")
+            print("saying response to innapropriate question")
+            thatwasbad()
+        elif (serialData == '5'):
+            print("in 5")
+            print("saying leaving response")
+            leavingNow()
+        elif (serialData == '3'):
+            if(firstInnapropriate == False):  
+                print("in 3")
+                print("saying response to innapropriate question")
+                thatwasbad()
+            else:
+                firstInnapropriate = False
+        else:
+            speak(toSay)
+        
+
 
 # Run listen when the program launches
 # You'll want to update this when you add your button(s)
@@ -468,6 +547,10 @@ if __name__ == "__main__":
 #Bahadir debug
     print("Bahadir 1.8")
 
-
+    # Startup Threading
+    buttonHandlerThread = threading.Thread(target=buttonHandler)
+    buttonHandlerThread.start()
+    
+    
     while True:
         controller()
