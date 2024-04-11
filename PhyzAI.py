@@ -17,6 +17,10 @@ import serial
 import whisper
 import re
 import threading
+from pathlib import Path
+
+# Get current path of this file
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 # Key for the openAI API - this is set as an environment variable: 
 # https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
@@ -51,14 +55,18 @@ timeWait = 15
 # init communicatio with arduino
 LOW_COMMAND = bytes('l', "utf-8")
 HIGH_COMMAND = bytes('h', "utf-8")
-serialObj = serial.Serial('COM4')
-serialObj.baudrate = 9600
-serialObj.bytesize = 8
-serialObj.parity = 'N'
-serialObj.stopbits = 1
-serialObj.timeout = None
-serialObj.write(LOW_COMMAND)
-serialObj.flush()
+try:    
+    serialObj = serial.Serial('COM4')
+    serialObj.baudrate = 9600
+    serialObj.bytesize = 8
+    serialObj.parity = 'N'
+    serialObj.stopbits = 1
+    serialObj.timeout = None
+    serialObj.write(LOW_COMMAND)
+    serialObj.flush()
+except:
+    print("Could note find anything on COM4")
+    serialObj = None
 time.sleep(1)
 
 firstListen = True
@@ -76,7 +84,6 @@ killSwitchOn = False
 async def ask(question: str, DEBUG=False, OVERRIDE=False):
     global toSay
     global slowTaskComplete
-    global stopped
 
     slowTaskComplete = False
     serialObj.timeout = 0
@@ -111,7 +118,6 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
         print("that was bad")
         thatwasbad()
         toSay = ""
-        stopped = True
         slowTaskComplete = True
     else:
         print("asking")
@@ -224,7 +230,6 @@ def controller():
     global firstListen
     global firstExit
     global firstInnapropriate
-    global stopped
 
     serialObj.timeout = None
     serialData = serialObj.read().decode('ascii')
@@ -237,8 +242,8 @@ def controller():
         listen()
 
     #Bahadir 20240317 - stop answering if 3 is pressed
-    if(stopped == True):
-        stopped = False
+    if(False):
+        pass
     elif (serialData == '3'):
         print("in 3")
         print("saying response to innapropriate question")
@@ -307,7 +312,7 @@ def speak(text: str) -> None:
 #Bahadir 20240317 - load the dad jokes from the file
 def loadDadJokes():
 
-    with open("dadJokes.txt", encoding="utf-8") as f:
+    with open("./config/dadJokes.txt", encoding="utf-8") as f:
         lines = f.readlines()
 
     for l in lines:
@@ -317,7 +322,7 @@ def loadDadJokes():
 def loadApologies():
     global apologies
 
-    with open("apologies.txt", encoding="utf-8") as f:
+    with open("./config/apologies.txt", encoding="utf-8") as f:
         lines = f.readlines()
 
     for l in lines:
@@ -327,7 +332,7 @@ def loadApologies():
 def loadleaving():
     global leaving
 
-    with open("leaving.txt", encoding="utf-8") as f:
+    with open("./config/leaving.txt", encoding="utf-8") as f:
         lines = f.readlines()
 
     for l in lines:
@@ -336,7 +341,7 @@ def loadleaving():
 def loadInnapropriate():
     global innapropriate
 
-    with open("innapropriate.txt", encoding="utf-8") as f:
+    with open("./config/innapropriate.txt", encoding="utf-8") as f:
         lines = f.readlines()
 
     for l in lines:
@@ -412,8 +417,8 @@ async def listen(OVERRIDE=False) -> None:
         # for index, name in enumerate(sr.Microphone.list_microphone_names()):
             # print("Microphone 7with name \"{1}\" found for `Microphone(device_index={0})`".format(index, name))
         print("Listening!") # You don't need this, but it's useful when debugging.
-        audio = r.listen(source, timeout=10)
-
+        audio = r.listen(source, timeout=10, phrase_time_limit=2)
+    print("done listening")
     # Recognise the speech using Whisper API
     try:
         # Send the audio from speech recognition to the Whisper API
@@ -424,10 +429,12 @@ async def listen(OVERRIDE=False) -> None:
 
          #Bahadir comment   file.flush()
             file.close()
-        assert os.path.exists("c:\\Users\\User\\Desktop\\PhyzAi\\audioFile.wav")
-        from pathlib import Path
-        my_path = Path('c:\\Users\\User\\Desktop\\PhyzAi\\audioFile.wav')
-        transcribe_response = whisperModel.transcribe(str(my_path))
+
+        audioFilePath = Path("{}/audioFile.wav".format(BASE_DIR))
+        assert os.path.exists(audioFilePath)
+        print(str(audioFilePath))
+
+        transcribe_response = whisperModel.transcribe(str(audioFilePath))
         recognised_speech = transcribe_response["text"]
         # recognised_speech = r.recognize_whisper_api(audio, api_key=os.environ['OPENAI_API_KEY'])
         print(f"Whisper API thinks you said {recognised_speech}") # You don't need this, but it's useful when debugging.
@@ -466,15 +473,17 @@ async def listen(OVERRIDE=False) -> None:
     # no longer listening
     isListening = False
 
-
 # Function to handle the button reading loop
 def buttonHandler():
     while True:
         # print("Checking Buttons")
 
-        serialObj.timeout = None
-        serialData = serialObj.read().decode('ascii')
-        print("Recieved %i" % serialData)
+        # For testing on other computers
+        serialData = str(input("Enter a command to simulate serial input [3,6]"))
+
+        # serialObj.timeout = None
+        # serialData = serialObj.read().decode('ascii')
+        print("Recieved %i" % int(serialData))
 
         """
         3 = NC
@@ -512,8 +521,8 @@ def buttonHandler():
         #     listen()
 
         #Bahadir 20240317 - stop answering if 3 is pressed
-        if(stopped == True):
-            stopped = False
+        if(False):
+            pass
         elif (serialData == '3'):
             print("in 3")
             print("saying response to innapropriate question")
