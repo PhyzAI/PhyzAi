@@ -294,15 +294,15 @@ def speak(text: str) -> None:
     
     # time.sleep(0)
 # Bahadir digital out for mouth
-    serialObj.write(HIGH_COMMAND)
-    serialObj.flush()
+    # serialObj.write(HIGH_COMMAND)
+    # serialObj.flush()
 
     engine.say(text)
     engine.runAndWait()
     engine.stop()
 
-    serialObj.write(LOW_COMMAND)
-    serialObj.flush()
+    # serialObj.write(LOW_COMMAND)
+    # serialObj.flush()
 # Bahadir digital out for mouth
 #    serialObj.digitalWrite(8, LOW)
 
@@ -430,7 +430,7 @@ async def listen(OVERRIDE=False) -> None:
          #Bahadir comment   file.flush()
             file.close()
 
-        audioFilePath = Path("{}/audioFile.wav".format(BASE_DIR))
+        audioFilePath = Path("{}\\audioFile.wav".format(BASE_DIR).replace("/","\\"))
         assert os.path.exists(audioFilePath)
         print(str(audioFilePath))
 
@@ -463,9 +463,15 @@ async def listen(OVERRIDE=False) -> None:
         # Handle the response from the API. If OVERRIDE is set, use the more general prompt.
         # Speak takes the audio, calls the API, and plays the response.
         if OVERRIDE:
-            asyncio.run(askWithWait())
+            # Create a task (Automatically scheduels for execution)
+            askWithWaitTask = asyncio.create_task(askWithWait())
+            background_tasks.add(askWithWaitTask) # Add task to the set. This creates a strong reference.
+            askWithWaitTask.add_done_callback(background_tasks.discard) # Setup callback to remove the task from the list once its done
         else: 
-            asyncio.run(askWithWait()) 
+            # Create a task (Automatically scheduels for execution)
+            askWithWaitTask = asyncio.create_task(askWithWait())
+            background_tasks.add(askWithWaitTask) # Add task to the set. This creates a strong reference.
+            askWithWaitTask.add_done_callback(background_tasks.discard) # Setup callback to remove the task from the list once its done
         # If the speech recognition library fails, this will throw on the computer.
     except sr.RequestError as e:
         print("Could not request results from Whisper API")
@@ -497,12 +503,13 @@ def buttonHandler():
                 pass
             case '4':
                 # Start Listening
-                asyncio.run(listen())
+                # asyncio.run(listen())
 
                 # Create a task to listen for input and add it to the background task queue (Automatically scheduels for execution)
                 listenerTask = asyncio.create_task(listen())
                 background_tasks.add(listenerTask) # Add task to the set. This creates a strong reference.
                 listenerTask.add_done_callback(background_tasks.discard) # Setup callback to remove the task from the list once its done
+                
 
                 isListening = True
                 pass
