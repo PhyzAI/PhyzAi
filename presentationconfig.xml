@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!--
+For each slideshow that you want to be readable by Phyz, please make a new
+slideshow tag with the name that the slideshow will be called (What Phyz is
+listening for when you ask him to play a slideshow) and the name of the
+folder with the slideshow images and pptx file. Images must be png, jpg, or
+jpeg.
+-->
+
+<slideshows>
+    <slideshow name="welcome" folderpath="PhyzAI_Rover_01_Welcome_Final" />
+    <slideshow name="slime show" folderpath="PhyzAI_Rover_01_Slime_Final" />
+</slideshows>

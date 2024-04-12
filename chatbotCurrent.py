@@ -17,6 +17,10 @@ import serial
 import whisper
 import re
 
+# Presentation Helpers
+from presentationConfig import PresentationConfig 
+from slideshow import SlideShow
+
 # Key for the openAI API - this is set as an environment variable: 
 # https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
 openai.api_key = os.environ["OPENAI_API_KEY"]
@@ -63,6 +67,15 @@ time.sleep(1)
 firstListen = True
 firstExit = True
 firstInnapropriate = True
+
+# Presentation mode state variables
+inPresentationMode = False
+
+currentSlideshowPath = ""
+currentSlide = 0
+pConfig = PresentationConfig("presentationconfig.xml")
+currentSlideshow = None
+
 
 # This function is the core of the chatbot. It sets the personality for the bot, and sends the question to openAI.
 async def ask(question: str, DEBUG=False, OVERRIDE=False):
@@ -112,8 +125,58 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
         print(question)
         response = ''
 
+        # Presentation Mode Stuff
+        if inPresentationMode:
+             # Say "exit presentation mode" or "stop presentation mode"
+            if "exit presentation" in question.lower() or "stop presentation" in question.lower():
+                inPresentationMode = False
+                print("exiting presentation mode")
+                toSay = "Spooling down my presentation module, do you have any science engineering technology or mathematics questions for me?"
+
+            if not currentSlideshowPath:
+                slideshowName = question.lower().replace("slideshow", "").replace("presentation","").strip()
+                print("Looking for %s" % slideshowName)
+                currentSlideshowPath = pConfig.getFolderPathOfShow(slideshowName)
+
+                # check if slideshow was not a valid one
+                if not currentSlideshowPath:
+                    toSay = "I couldn't find the %s slideshow" % question
+                else:
+                    currentSlideshowPath = None
+                    currentSlide = 0
+                    currentSlideshow = SlideShow(currentSlideshowPath)
+                    toSay = ("I'm bringing up the %s slideshow." % question) + currentSlideshow.slides[currentSlide].notes
+
+
+            # We have a slideshow, lets present it
+            else:
+                q = question.lower()
+                if "next slide" in q:
+                    currentSlide = currentSlide + 1
+                    if currentSlide > len(currentSlideshow.slides):
+                        toSay = "You are at the end of the slideshow"
+                    else:
+                        toSay = currentSlideshow.slides[currentSlide].notes
+                
+                elif "last slide" in q:
+                    currentSlide = currentSlide - 1
+                    if currentSlide < 0:
+                        toSay = "You are at the beginning of the slideshow"
+                    else:
+                        toSay = currentSlideshow.slides[currentSlide].notes
+                
+                elif "repeat" in q:
+                    toSay = currentSlideshow.slides[currentSlide].notes
+
+
+        # Say "enter presentation mode" or "start presentation mode"
+        elif "enter presentation" in question.lower() or "start presentation" in question.lower():
+            inPresentationMode = True
+            print("Entering presentation mode")
+            toSay = "Starting up my presentation module, which presentation would you like me to load?"
+
         # Say Speech Function
-        if question.startswith('Say'):
+        elif question.startswith('Say'):
             print("Skipping gpt")
             regexp = re.compile("Say(.*)")
             toSay = regexp.search(question).group(1)
