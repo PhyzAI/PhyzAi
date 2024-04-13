@@ -83,6 +83,12 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
     global slowTaskComplete
     global stopped
 
+    global inPresentationMode
+    global currentSlideshowPath
+    global currentSlide
+    global pConfig
+    global currentSlideshow
+
     slowTaskComplete = False
     serialObj.timeout = 0
 
@@ -122,8 +128,13 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
         print("asking")
         print(currentSerial)
         question = question.lstrip()
-        print(question)
-        response = ''
+        print("The question is %s" % question)
+        # inPresentationMode = True
+        print("Are we in pres mode %s" % str(inPresentationMode))
+
+        response = None
+        
+        
 
         # Presentation Mode Stuff
         if inPresentationMode:
@@ -135,16 +146,18 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
                 toSay = "Spooling down my presentation module, do you have any science engineering technology or mathematics questions for me?"
 
             elif not currentSlideshowPath:
-                slideshowName = question.lower().replace("slideshow", "").replace("presentation","").strip()
+                slideshowName = question.lower().replace("slideshow", "").replace("presentation", "").replace(".", "").strip()
                 print("Looking for %s" % slideshowName)
                 currentSlideshowPath = pConfig.getFolderPathOfShow(slideshowName)
-
+                print("hai")
                 # check if slideshow was not a valid one
                 if not currentSlideshowPath:
                     toSay = "I couldn't find the %s slideshow" % question
-                else:
+                    print("I couldn't find the %s slideshow" % question)
                     currentSlideshowPath = None
+                else:                    
                     currentSlide = 0
+                    print("I'm bringing up the %s slideshow." % currentSlideshowPath)
                     currentSlideshow = SlideShow(currentSlideshowPath)
                     toSay = ("I'm bringing up the %s slideshow." % question) + currentSlideshow.slides[currentSlide].notes
 

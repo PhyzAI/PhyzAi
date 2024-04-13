@@ -21,18 +21,20 @@ class SlideShow:
         self.slideImagePaths = []
         self.slides = []
         self.prs = None
-
+        print("Trying to find %s" % p)
         # Get Power Point File from folderPathForPresentation
         try:
             # Get the first power point file in specified directory
             for file in os.listdir(self.folderPathForPresentation):
                 
                 if ".pptx" in file:
-                    print(file)
-                    self.prs = Presentation(self.folderPathForPresentation + "/" + file)
+                    print(self.folderPathForPresentation + "\\" + file)
+                    self.prs = Presentation(".\\" + self.folderPathForPresentation + "\\" + file)
                     break
+            # raise Exception('couldnt find file')
         except Exception:
             print("failed to open pptx in %s" % self.folderPathForPresentation)
+
 
         # Get Slide Files paths from folderPathForPresentation
         try:

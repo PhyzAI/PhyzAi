@@ -8,6 +8,5 @@ jpeg.
 -->
 
 <slideshows>
-    <slideshow name="welcome" folderpath="PhyzAI_Rover_01_Welcome_Final" />
-    <slideshow name="slime show" folderpath="PhyzAI_Rover_01_Slime_Final" />
+    <slideshow name="welcome" folderpath="Welcome_Slideshow" />
 </slideshows>
