@@ -86,9 +86,9 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
     slowTaskComplete = False
     serialObj.timeout = 0
 
-# Bahadir digital out for mouth
-#    serialObj.pinMode(8, OUTPUT)
-#    serialObj.digitalWrite(8, HIGH)
+    # Bahadir digital out for mouth
+    #    serialObj.pinMode(8, OUTPUT)
+    #    serialObj.digitalWrite(8, HIGH)
 
 
     """Sends a question to the openAI API and returns the answer. Set OVERRIDE to True to override constraints on the answer."""
@@ -127,13 +127,14 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
 
         # Presentation Mode Stuff
         if inPresentationMode:
+            print("In presentation mode")
              # Say "exit presentation mode" or "stop presentation mode"
             if "exit presentation" in question.lower() or "stop presentation" in question.lower():
                 inPresentationMode = False
                 print("exiting presentation mode")
                 toSay = "Spooling down my presentation module, do you have any science engineering technology or mathematics questions for me?"
 
-            if not currentSlideshowPath:
+            elif not currentSlideshowPath:
                 slideshowName = question.lower().replace("slideshow", "").replace("presentation","").strip()
                 print("Looking for %s" % slideshowName)
                 currentSlideshowPath = pConfig.getFolderPathOfShow(slideshowName)
@@ -168,7 +169,7 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
                 elif "repeat" in q:
                     toSay = currentSlideshow.slides[currentSlide].notes
 
-
+        
         # Say "enter presentation mode" or "start presentation mode"
         elif "enter presentation" in question.lower() or "start presentation" in question.lower():
             inPresentationMode = True
