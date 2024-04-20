@@ -159,18 +159,22 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
                     currentSlide = 0
                     print("I'm bringing up the %s slideshow." % currentSlideshowPath)
                     currentSlideshow = SlideShow(currentSlideshowPath)
-                    toSay = ("I'm bringing up the %s slideshow." % question) + currentSlideshow.slides[currentSlide].notes
+                    toSay = currentSlideshow.slides[currentSlide].notes
+                    print(currentSlideshow.slides[currentSlide].notes)
+                    # currentSlide = currentSlide + 1
 
 
             # We have a slideshow, lets present it
             else:
                 q = question.lower()
-                if "next slide" in q:
-                    currentSlide = currentSlide + 1
+                if True:
+                    # currentSlide = currentSlide + 1
+                    currentSlide=7
                     if currentSlide > len(currentSlideshow.slides):
                         toSay = "You are at the end of the slideshow"
                     else:
                         toSay = currentSlideshow.slides[currentSlide].notes
+                        print(currentSlideshow.slides[currentSlide].notes)
                 
                 elif "last slide" in q:
                     currentSlide = currentSlide - 1
@@ -182,9 +186,13 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
                 elif "repeat" in q:
                     toSay = currentSlideshow.slides[currentSlide].notes
 
+                else:
+                    toSay = "I didn't quite get that, what would you like me to do?"
+
         
         # Say "enter presentation mode" or "start presentation mode"
         elif "enter presentation" in question.lower() or "start presentation" in question.lower():
+            currentSlide = 0
             inPresentationMode = True
             print("Entering presentation mode")
             toSay = "Starting up my presentation module, which presentation would you like me to load?"
@@ -310,7 +318,7 @@ def controller():
     elif (serialData == '3'):
         print("in 3")
         print("saying response to innapropriate question")
-        thatwasbad()
+        # thatwasbad()
     elif (serialData == '5'):
         print("in 5")
         print("saying leaving response")
@@ -360,6 +368,7 @@ def speak(text: str) -> None:
     serialObj.write(HIGH_COMMAND)
     serialObj.flush()
 
+    engine.setProperty('rate', 175)
     engine.say(text)
     engine.runAndWait()
     engine.stop()

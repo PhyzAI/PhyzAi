@@ -9,4 +9,5 @@ jpeg.
 
 <slideshows>
     <slideshow name="welcome" folderpath="Welcome_Slideshow" />
+    <slideshow name="interview" folderpath="Interview_Slideshow" />
 </slideshows>
