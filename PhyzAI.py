@@ -11,6 +11,7 @@ import csv # csv library
 import keyboard # get key presses
 import random # random number generator
 import asyncio # have multiple tasks running at once
+import threading
 import winsound # make beeping noises
 import time
 import serial
@@ -18,6 +19,10 @@ import whisper
 import re
 import threading
 from pathlib import Path
+
+# Presentation Helpers
+from presentationConfig import PresentationConfig 
+from slideshow import SlideShow
 
 # Get current path of this file
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -79,9 +84,11 @@ background_tasks = set()
 # Conditions for multithreading
 isListening = False
 killSwitchOn = False
+handlingButtons = True
+SpeechRoutineThread = None
 
 # This function is the core of the chatbot. It sets the personality for the bot, and sends the question to openAI.
-async def ask(question: str, DEBUG=False, OVERRIDE=False):
+def ask(question: str, DEBUG=False, OVERRIDE=False):
     global toSay
     global slowTaskComplete
 
@@ -89,8 +96,8 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
     serialObj.timeout = 0
 
     # Bahadir digital out for mouth
-    #    serialObj.pinMode(8, OUTPUT)
-    #    serialObj.digitalWrite(8, HIGH)
+    serialObj.pinMode(8, OUTPUT)
+    serialObj.digitalWrite(8, HIGH)
 
 
     """Sends a question to the openAI API and returns the answer. Set OVERRIDE to True to override constraints on the answer."""
@@ -108,63 +115,58 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
     frequency = random.randint(200, 1000) # Set Frequency To 2500 Hertz
     duration = 100 # Set Duration To 1000 ms == 1 second
     winsound.Beep(frequency, duration)
-    await asyncio.sleep(1)
+    # await asyncio.sleep(1)
     frequency = random.randint(200, 1000) # Set Frequency To 2500 Hertz
     duration = 100 # Set Duration To 1000 ms == 1 second
     winsound.Beep(frequency, duration)
     currentSerial = serialObj.read().decode('ascii')
     #if (serialObj.read().decode('ascii') == '3'):
-    if (currentSerial == '5'):
-        print("that was bad")
-        thatwasbad()
-        toSay = ""
-        slowTaskComplete = True
-    else:
-        print("asking")
-        print(currentSerial)
-        question = question.lstrip()
-        print(question)
-        response = ''
+    
+    print("asking")
+    print(currentSerial)
+    question = question.lstrip()
+    print(question)
+    response = ''
 
-        # Say Speech Function
-        if question.startswith('Say'):
-            print("Skipping gpt")
-            regexp = re.compile("Say(.*)")
-            toSay = regexp.search(question).group(1)
-            print(toSay)
-            
-        # # Phyz Please ...... speech functions
-        elif question.lower().startswith('fizz please') or question.lower().startswith('fizz, please') or question.lower().startswith('this, please'):
-            print("Skipping GPT")
-            # speechPrompt =  re.compile("Fizz please(.*)").search(question).group(1)
-            if "introduce yourself" in question.lower():
-                toSay = "Hi I'm Fizz AI, I really really loooovvvee Bahadir mwah XOXO"
+    # Say Speech Function
+    if question.startswith('Say'):
+        print("Skipping gpt")
+        regexp = re.compile("Say(.*)")
+        toSay = regexp.search(question).group(1)
+        print(toSay)
         
-        elif "dad joke" in question.lower() or "bad joke" in question.lower():
-            print ("Picks a predetermined dad joke from a list")
-            toSay = getDadJoke()
+    # # Phyz Please ...... speech functions
+    elif question.lower().startswith('fizz please') or question.lower().startswith('fizz, please') or question.lower().startswith('this, please'):
+        print("Skipping GPT")
+        # speechPrompt =  re.compile("Fizz please(.*)").search(question).group(1)
+        if "introduce yourself" in question.lower():
+            toSay = "Hi I'm Fizz AI, I really really loooovvvee Bahadir mwah XOXO"
+    
+    elif "dad joke" in question.lower() or "bad joke" in question.lower():
+        print ("Picks a predetermined dad joke from a list")
+        toSay = getDadJoke()
 
-        # Run ChatGPT response
-        else:
-            print("Asking ChatGPT")
-            start_time = time.perf_counter()
-            response = openai.ChatCompletion.create(
-                # Select the model to answer the question. 3.5 is cheap and fast. 
-                # 4 would offer better answers, but is much more expensive.
-                model="gpt-3.5-turbo",
+    # Run ChatGPT response
+    else:
+        print("Asking ChatGPT")
+        start_time = time.perf_counter()
+        response = openai.ChatCompletion.create(
+            # Select the model to answer the question. 3.5 is cheap and fast. 
+            # 4 would offer better answers, but is much more expensive.
+            model="gpt-3.5-turbo",
 
-                # Set the personality of the bot. The 'system' role tells the bot who it is.
-                # The 'user' role is the question the user has asked.
-                messages= [
-                    {"role":"system",
-                        "content":prompt},
-                    {"role":"user","content":question}
-                ]
-            )
-            
-            end_time = time.perf_counter()
-            print(f"Total request duration: {end_time-start_time} seconds")
-            toSay = response['choices'][0]['message']['content']
+            # Set the personality of the bot. The 'system' role tells the bot who it is.
+            # The 'user' role is the question the user has asked.
+            messages= [
+                {"role":"system",
+                    "content":prompt},
+                {"role":"user","content":question}
+            ]
+        )
+        
+        end_time = time.perf_counter()
+        print(f"Total request duration: {end_time-start_time} seconds")
+        toSay = response['choices'][0]['message']['content']
 
 
         # If you set the DEBUG flag to True, it will print the whole response here.
@@ -177,7 +179,11 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
         slowTaskComplete = True
         #print("slow task complete")
 
-async def beeps():
+        # Speak fax
+        speak(toSay)
+
+"""
+def beeps():
     global slowTaskComplete
     print("in beeps")
     
@@ -195,8 +201,9 @@ async def beeps():
 
         #await(SlowTask)
         #await asyncio.sleep(timeWait)
-
-async def askWithWait():
+"""
+"""
+def askWithWait():
     print("in ask with wait")
     global slowTaskComplete
     global recognised_speech
@@ -225,7 +232,8 @@ async def askWithWait():
         slowTaskComplete = False
     except asyncio.CancelledError:
         print("cancelled")
-
+"""
+"""
 def controller():
     global firstListen
     global firstExit
@@ -261,6 +269,7 @@ def controller():
             firstInnapropriate = False
     else:
         speak(toSay)
+"""
 
 # This function plays the output we get back from the API.
 def speak(text: str) -> None:
@@ -293,18 +302,18 @@ def speak(text: str) -> None:
         csv_writer.writerow(current_data)
     
     # time.sleep(0)
-# Bahadir digital out for mouth
-    # serialObj.write(HIGH_COMMAND)
-    # serialObj.flush()
+    # Bahadir digital out for mouth
+    serialObj.write(HIGH_COMMAND)
+    serialObj.flush()
 
     engine.say(text)
     engine.runAndWait()
     engine.stop()
 
-    # serialObj.write(LOW_COMMAND)
-    # serialObj.flush()
-# Bahadir digital out for mouth
-#    serialObj.digitalWrite(8, LOW)
+    serialObj.write(LOW_COMMAND)
+    serialObj.flush()
+    # Bahadir digital out for mouth
+    # serialObj.digitalWrite(8, LOW)
 
     inSpeaking = False
     return
@@ -397,7 +406,7 @@ def getDadJoke():
     # print(oneDadJoke)
 
 # This is the main loop of the program. It listens for the user to say something, then sends it to the API.
-async def listen(OVERRIDE=False) -> None:
+def listen(OVERRIDE=False) -> None:
     """Listens for audio and calls other functions to fetch and play a response."""
     # Obtain audio from the microphone using the speech recognition library
     # Create a listener object
@@ -461,34 +470,32 @@ async def listen(OVERRIDE=False) -> None:
             current_data = [today, timeString, recognised_speech]
             csv_writer.writerow(current_data)
         # Handle the response from the API. If OVERRIDE is set, use the more general prompt.
+
+        # no longer listening
+        isListening = False
+        
         # Speak takes the audio, calls the API, and plays the response.
         if OVERRIDE:
-            # Create a task (Automatically scheduels for execution)
-            askWithWaitTask = asyncio.create_task(askWithWait())
-            background_tasks.add(askWithWaitTask) # Add task to the set. This creates a strong reference.
-            askWithWaitTask.add_done_callback(background_tasks.discard) # Setup callback to remove the task from the list once its done
+            ask(recognised_speech)
         else: 
-            # Create a task (Automatically scheduels for execution)
-            askWithWaitTask = asyncio.create_task(askWithWait())
-            background_tasks.add(askWithWaitTask) # Add task to the set. This creates a strong reference.
-            askWithWaitTask.add_done_callback(background_tasks.discard) # Setup callback to remove the task from the list once its done
+            ask(recognised_speech)
         # If the speech recognition library fails, this will throw on the computer.
     except sr.RequestError as e:
         print("Could not request results from Whisper API")
 
-    # no longer listening
-    isListening = False
+        # no longer listening
+        isListening = False
+    
 
 # Function to handle the button reading loop
 def buttonHandler():
-    while True:
-        # print("Checking Buttons")
-
+    while handlingButtons:
+        global SpeechRoutineThread
         # For testing on other computers
-        serialData = str(input("Enter a command to simulate serial input [3,6]"))
+        # serialData = str(input("Enter a command to simulate serial input [3,6]"))
 
-        # serialObj.timeout = None
-        # serialData = serialObj.read().decode('ascii')
+        serialObj.timeout = None
+        serialData = serialObj.read().decode('ascii')
         print("Recieved %i" % int(serialData))
 
         """
@@ -502,51 +509,24 @@ def buttonHandler():
             case '3':
                 pass
             case '4':
-                # Start Listening
-                # asyncio.run(listen())
-
-                # Create a task to listen for input and add it to the background task queue (Automatically scheduels for execution)
-                listenerTask = asyncio.create_task(listen())
-                background_tasks.add(listenerTask) # Add task to the set. This creates a strong reference.
-                listenerTask.add_done_callback(background_tasks.discard) # Setup callback to remove the task from the list once its done
-                
+                # Check to make sure we don't override a currently running speech routine thread
+                if (not SpeechRoutineThread.isAlive()):
+                    # Make new speech routine thread and start it
+                    SpeechRoutineThread = threading.Thread(target=listen)
+                    SpeechRoutineThread.start()
+                else:
+                    print("Can't start a new speech routine, we are already in one qwq")
 
                 isListening = True
                 pass
             case '5':
+                
                 pass
             case '6':
                 killSwitchOn = True
+                SpeechRoutineThread.join()
+                print("Speech Routine Killed")
                 pass
-
-
-        #if (serialObj.inWaiting() > 0):
-        #print(serialObj.read().decode('ascii'))
-        # if (serialData == '4'):
-        #     print("in 4")
-        #     print("saw button press")
-        #     listen()
-
-        #Bahadir 20240317 - stop answering if 3 is pressed
-        if(False):
-            pass
-        elif (serialData == '3'):
-            print("in 3")
-            print("saying response to innapropriate question")
-            thatwasbad()
-        elif (serialData == '5'):
-            print("in 5")
-            print("saying leaving response")
-            leavingNow()
-        elif (serialData == '3'):
-            if(firstInnapropriate == False):  
-                print("in 3")
-                print("saying response to innapropriate question")
-                thatwasbad()
-            else:
-                firstInnapropriate = False
-        else:
-            speak(toSay)
         
 
 
@@ -560,13 +540,11 @@ if __name__ == "__main__":
     loadDadJokes()
     #try:
     print("Welcome to Phyz AI, press 4 to ask a question or 5 to stop the question and 3 to leave")
-#Bahadir debug
-    print("Bahadir 1.8")
 
     # Startup Threading
     buttonHandlerThread = threading.Thread(target=buttonHandler)
     buttonHandlerThread.start()
     
     
-    while True:
-        controller()
+    # while True:
+    #     controller()
