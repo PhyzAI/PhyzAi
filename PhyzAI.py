@@ -19,6 +19,7 @@ import whisper
 import re
 import threading
 from pathlib import Path
+from tts import _TTS
 
 # Presentation Helpers
 from presentationConfig import PresentationConfig 
@@ -30,11 +31,6 @@ BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 # Key for the openAI API - this is set as an environment variable: 
 # https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
 openai.api_key = os.environ["OPENAI_API_KEY"]
-
-# initialize text to speach
-engine = pyttsx3.init()
-engine.setProperty('rate', 200)
-engine.setProperty('volume', 1)
 
 whisperModel = whisper.load_model("tiny.en")
 
@@ -70,7 +66,7 @@ try:
     serialObj.write(LOW_COMMAND)
     serialObj.flush()
 except:
-    print("Could note find anything on COM4")
+    print("Could not find anything on COM4")
     serialObj = None
 time.sleep(1)
 
@@ -86,6 +82,7 @@ isListening = False
 killSwitchOn = False
 handlingButtons = True
 SpeechRoutineThread = None
+inSpeechRoutine = False
 
 # This function is the core of the chatbot. It sets the personality for the bot, and sends the question to openAI.
 def ask(question: str, DEBUG=False, OVERRIDE=False):
@@ -94,10 +91,6 @@ def ask(question: str, DEBUG=False, OVERRIDE=False):
 
     slowTaskComplete = False
     serialObj.timeout = 0
-
-    # Bahadir digital out for mouth
-    serialObj.pinMode(8, OUTPUT)
-    serialObj.digitalWrite(8, HIGH)
 
 
     """Sends a question to the openAI API and returns the answer. Set OVERRIDE to True to override constraints on the answer."""
@@ -276,6 +269,7 @@ def speak(text: str) -> None:
     """Plays the text using python text to speech"""
     print("in speak")
     global inSpeaking
+    global inSpeechRoutine
     inSpeaking = True
 
     # Select the voice to use and pass it the text to read.
@@ -300,15 +294,14 @@ def speak(text: str) -> None:
         # appending data
         current_data = [today, timeString, text]
         csv_writer.writerow(current_data)
-    
     # time.sleep(0)
     # Bahadir digital out for mouth
     serialObj.write(HIGH_COMMAND)
     serialObj.flush()
 
-    engine.say(text)
-    engine.runAndWait()
-    engine.stop()
+    engine = _TTS()
+    engine.start(text)
+    del(engine)
 
     serialObj.write(LOW_COMMAND)
     serialObj.flush()
@@ -316,6 +309,8 @@ def speak(text: str) -> None:
     # serialObj.digitalWrite(8, LOW)
 
     inSpeaking = False
+    inSpeechRoutine = False
+    print("Done speaking")
     return
 
 #Bahadir 20240317 - load the dad jokes from the file
@@ -489,8 +484,12 @@ def listen(OVERRIDE=False) -> None:
 
 # Function to handle the button reading loop
 def buttonHandler():
+    global SpeechRoutineThread
+    global inSpeechRoutine
+    # SpeechRoutineThread = threading.Thread(target=listen)
+
     while handlingButtons:
-        global SpeechRoutineThread
+        
         # For testing on other computers
         # serialData = str(input("Enter a command to simulate serial input [3,6]"))
 
@@ -510,7 +509,7 @@ def buttonHandler():
                 pass
             case '4':
                 # Check to make sure we don't override a currently running speech routine thread
-                if (not SpeechRoutineThread.isAlive()):
+                if (not inSpeechRoutine):
                     # Make new speech routine thread and start it
                     SpeechRoutineThread = threading.Thread(target=listen)
                     SpeechRoutineThread.start()
@@ -518,14 +517,17 @@ def buttonHandler():
                     print("Can't start a new speech routine, we are already in one qwq")
 
                 isListening = True
-                pass
-            case '5':
-                
+                inSpeechRoutine = True
                 pass
             case '6':
+                
+                pass
+            case '5':
                 killSwitchOn = True
                 SpeechRoutineThread.join()
+                # SpeechRoutineThread= None
                 print("Speech Routine Killed")
+                inSpeechRoutine= False
                 pass
         
 
