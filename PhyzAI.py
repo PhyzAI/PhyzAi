@@ -84,6 +84,11 @@ handlingButtons = True
 SpeechRoutineThread = None
 inSpeechRoutine = False
 
+
+def playSlideshow(slideshow, slide = 0):
+    pass
+
+
 # This function is the core of the chatbot. It sets the personality for the bot, and sends the question to openAI.
 def ask(question: str, DEBUG=False, OVERRIDE=False):
     global toSay
@@ -506,6 +511,7 @@ def buttonHandler():
 
         match serialData:
             case '3':
+                playSlideshow()
                 pass
             case '4':
                 # Check to make sure we don't override a currently running speech routine thread
