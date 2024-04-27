@@ -28,29 +28,29 @@ class SlideShow:
             for file in os.listdir(self.folderPathForPresentation):
                 
                 if ".pptx" in file:
-                    print(file)
+                    print("Found %s" % file)
                     self.prs = Presentation(self.folderPathForPresentation + "/" + file)
                     break
         except Exception:
             print("failed to open pptx in %s" % self.folderPathForPresentation)
 
         # Get Slide Files paths from folderPathForPresentation
-        try:
-            slideNumber = 0
-            while True:
-                foundSlide = False
-                for file in os.listdir(self.folderPathForPresentation):
-                    if ("%i.png" % slideNumber) in file or ("%i.jpg" % slideNumber) in file or ("%i.jpeg" % slideNumber) in file:
-                        self.slideImagePaths.append(file)
-                        foundSlide = True
-                        break
-                slideNumber = slideNumber + 1
-                if not foundSlide:
-                    # print("Found %i slides" % slideNumber)
-                    break
+        # try:
+        #     slideNumber = 0
+        #     while True:
+        #         foundSlide = False
+        #         for file in os.listdir(self.folderPathForPresentation):
+        #             if ("%i.png" % slideNumber) in file or ("%i.jpg" % slideNumber) in file or ("%i.jpeg" % slideNumber) in file:
+        #                 self.slideImagePaths.append(file)
+        #                 foundSlide = True
+        #                 break
+        #         slideNumber = slideNumber + 1
+        #         if not foundSlide:
+        #             # print("Found %i slides" % slideNumber)
+        #             break
                 
-        except Exception:
-            print("failed to find any slides in %s" % self.folderPathForPresentation)
+        # except Exception:
+        #     print("failed to find any slides in %s" % self.folderPathForPresentation)
 
         # Pull Notes from Slides
         slideNumber = 0
@@ -66,7 +66,8 @@ class SlideShow:
             noteText = noteText.replace("`", "") # Remove backticks chars
 
             # Add this slide to our list of slides in this slideshow
-            self.slides.append(Slide(noteText, self.slideImagePaths[slideNumber]))
+            # self.slides.append(Slide(noteText, self.slideImagePaths[slideNumber]))
+            self.slides.append(Slide(noteText, ""))
             slideNumber = slideNumber + 1
 
 

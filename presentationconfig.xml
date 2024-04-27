@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+For each slideshow that you want to be readable by Phyz, please make a new
+slideshow tag with the name that the slideshow will be called (What Phyz is
+listening for when you ask him to play a slideshow) and the name of the
+folder with the slideshow images and pptx file. Images must be png, jpg, or
+jpeg.
+-->
+
+<slideshows>
+    <slideshow name="welcome" folderpath="Welcome_Slideshow" />
+    <slideshow name="interview" folderpath="Interview_Slideshow" />
+    <slideshow name="hydro2" folderpath="Hydro1" />
+    <slideshow name="hydro3" folderpath="Hydro2" />
+    <slideshow name="hydro1" folderpath="Hydro3" />
+    <slideshow name="hydro4" folderpath="Hydro4" />
+    <slideshow name="hydro5" folderpath="Hydro5" />
+    <slideshow name="hydro6" folderpath="Hydro6" />
+    <slideshow name="hydro7" folderpath="Hydro7" />
+    <slideshow name="journals" folderpath="Journals" />
+    <slideshow name="makeagenerator" folderpath="MakeAGenerator" />
+    <slideshow name="makeamotor" folderpath="MakeAMotor" />
+    <slideshow name="storedenergy" folderpath="StoredEnergy" />
+</slideshows>

@@ -84,9 +84,23 @@ handlingButtons = True
 SpeechRoutineThread = None
 inSpeechRoutine = False
 
+# Presentation mode state variables
+inPresentationMode = False
+currentSlide = 0
+slideshowToPlay = "hydro2" # Set me to hardcode slideshow (uses the slideshow name from presentationconfig.xml)
+pConfig = PresentationConfig("presentationconfig.xml")
+currentSlideshow = SlideShow(pConfig.slideShows[slideshowToPlay])
+
+
 
 def playSlideshow(slideshow, slide = 0):
-    pass
+    global currentSlide
+    print("Playing slide %i in the slideshow" % currentSlide)
+
+    if currentSlide < len(currentSlideshow.slides):
+        speak(currentSlideshow.slides[currentSlide].notes)
+
+    currentSlide = currentSlide + 1
 
 
 # This function is the core of the chatbot. It sets the personality for the bot, and sends the question to openAI.
@@ -491,6 +505,7 @@ def listen(OVERRIDE=False) -> None:
 def buttonHandler():
     global SpeechRoutineThread
     global inSpeechRoutine
+    global currentSlide
     # SpeechRoutineThread = threading.Thread(target=listen)
 
     while handlingButtons:
@@ -530,10 +545,13 @@ def buttonHandler():
                 pass
             case '5':
                 killSwitchOn = True
-                SpeechRoutineThread.join()
-                # SpeechRoutineThread= None
-                print("Speech Routine Killed")
-                inSpeechRoutine= False
+
+                if currentSlide > 0:
+                    currentSlide = currentSlide - 1
+                # SpeechRoutineThread.join()
+                # # SpeechRoutineThread= None
+                # print("Speech Routine Killed")
+                # inSpeechRoutine= False
                 pass
         
 
