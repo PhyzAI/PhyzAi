@@ -87,14 +87,16 @@ inSpeechRoutine = False
 # Presentation mode state variables
 inPresentationMode = False
 currentSlide = 0
-slideshowToPlay = "hydro2" # Set me to hardcode slideshow (uses the slideshow name from presentationconfig.xml)
+slideshowToPlay = "journals" # Set me to hardcode slideshow (uses the slideshow name from presentationconfig.xml)
 pConfig = PresentationConfig("presentationconfig.xml")
 currentSlideshow = SlideShow(pConfig.slideShows[slideshowToPlay])
 
 
 
-def playSlideshow(slideshow, slide = 0):
+def playSlideshow():
     global currentSlide
+    global currentSlideshow
+
     print("Playing slide %i in the slideshow" % currentSlide)
 
     if currentSlide < len(currentSlideshow.slides):
@@ -548,6 +550,7 @@ def buttonHandler():
 
                 if currentSlide > 0:
                     currentSlide = currentSlide - 1
+                    print("Moved to slide %i" % currentSlide)
                 # SpeechRoutineThread.join()
                 # # SpeechRoutineThread= None
                 # print("Speech Routine Killed")
