@@ -21,4 +21,5 @@ jpeg.
     <slideshow name="makeagenerator" folderpath="MakeAGenerator" />
     <slideshow name="makeamotor" folderpath="MakeAMotor" />
     <slideshow name="storedenergy" folderpath="StoredEnergy" />
+    <slideshow name="script1" folderpath="Script1" />
 </slideshows>
