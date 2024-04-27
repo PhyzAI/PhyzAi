@@ -101,6 +101,8 @@ def playSlideshow():
 
     if currentSlide < len(currentSlideshow.slides):
         speak(currentSlideshow.slides[currentSlide].notes)
+    else:
+        speak("All done with the slideshow")
 
     currentSlide = currentSlide + 1
 
@@ -531,16 +533,20 @@ def buttonHandler():
                 playSlideshow()
                 pass
             case '4':
-                # Check to make sure we don't override a currently running speech routine thread
-                if (not inSpeechRoutine):
-                    # Make new speech routine thread and start it
-                    SpeechRoutineThread = threading.Thread(target=listen)
-                    SpeechRoutineThread.start()
-                else:
-                    print("Can't start a new speech routine, we are already in one qwq")
+                # # Check to make sure we don't override a currently running speech routine thread
+                # if (not inSpeechRoutine):
+                #     # Make new speech routine thread and start it
+                #     SpeechRoutineThread = threading.Thread(target=listen)
+                #     SpeechRoutineThread.start()
+                # else:
+                #     print("Can't start a new speech routine, we are already in one qwq")
 
-                isListening = True
-                inSpeechRoutine = True
+                # isListening = True
+                # inSpeechRoutine = True
+
+                if currentSlide > 0:
+                    currentSlide = currentSlide + 1
+                    print("Moved to slide %i" % currentSlide)
                 pass
             case '6':
                 
