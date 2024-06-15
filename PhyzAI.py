@@ -365,6 +365,7 @@ def loadleaving():
     for l in lines:
         leaving.append(l.split("<>"))
 
+# load inappropiate question responses from file
 def loadInnapropriate():
     global innapropriate
 
@@ -504,7 +505,6 @@ def listen(OVERRIDE=False) -> None:
         # no longer listening
         isListening = False
     
-
 # Function to handle the button reading loop
 def buttonHandler():
     global SpeechRoutineThread
@@ -562,8 +562,6 @@ def buttonHandler():
                 # print("Speech Routine Killed")
                 # inSpeechRoutine= False
                 pass
-        
-
 
 # Run listen when the program launches
 # You'll want to update this when you add your button(s)
