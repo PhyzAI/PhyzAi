@@ -530,6 +530,7 @@ def buttonHandler():
 
         match serialData:
             case '3':
+                time.sleep(2)
                 playSlideshow()
                 pass
             case '4':
