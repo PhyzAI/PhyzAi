@@ -87,7 +87,7 @@ inSpeechRoutine = False
 # Presentation mode state variables
 inPresentationMode = False
 currentSlide = 0
-slideshowToPlay = "journals" # Set me to hardcode slideshow (uses the slideshow name from presentationconfig.xml)
+slideshowToPlay = "hydro4" # Set me to hardcode slideshow (uses the slideshow name from presentationconfig.xml)
 pConfig = PresentationConfig("presentationconfig.xml")
 currentSlideshow = SlideShow(pConfig.slideShows[slideshowToPlay])
 
@@ -520,6 +520,7 @@ def buttonHandler():
         serialObj.timeout = None
         serialData = serialObj.read().decode('ascii')
         print("Recieved %i" % int(serialData))
+
 
         """
         3 = NC

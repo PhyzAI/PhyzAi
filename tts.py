@@ -6,7 +6,7 @@ class _TTS:
     rate = None
     def __init__(self):
         self.engine = pyttsx3.init()
-        self.engine.setProperty('rate', 200)
+        self.engine.setProperty('rate', 187)
         self.engine.setProperty('volume', 1)
 
 
