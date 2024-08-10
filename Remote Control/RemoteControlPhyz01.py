@@ -33,7 +33,7 @@ import numpy as np
 
 # Image Definitions
 
-enable_GUI = True
+enable_GUI = False
 
 image_size_x = 800
 image_size_y = 600
@@ -45,14 +45,14 @@ image_size_y = 600
 head_x_channel = 1   # Determine what these actually are on Phyz's Maestro board with Maestro Control Center
 head_y_channel = 0
 head_tilt_channel = 2
-arm_left_channel = 3 
-arm_right_channel = 4
+arm_left_channel = 4
+arm_right_channel = 3
 
 head_x_range = (1520*4, 1620*4, 1728*4)  # Get these from real PhyzAI Maestro board
 head_y_range = (735*4, 936*4, 1136*4)
-head_tilt_range = (1344*4, 1450*4, 1552*4) 
-arm_left_range = (1008*4, 1008*4, 3008*4)  #FIXME: Need to get these.
-arm_right_range = (1008*4, 1008*4, 3008*4)
+head_tilt_range = (1400*4, 1450*4, 1500*4) 
+arm_right_range = (1536*4, 2608*4, 2608*4) 
+arm_left_range = (1184*4, 1184*4, 1744*4)
 
 
 
@@ -132,8 +132,8 @@ def draw_pos(pos_x,pos_y, angle=0, left_arm=0, right_arm=0):
 pygame.init()
 
 # FIXME: Choose correct com-port and device
-#servo = maestro.Controller('COM5', device=1)  # Phyz; Check COM port in Windows Device Manager
-servo = maestro.Controller('COM3', device=2)  # Keith @ home; Check COM port in Windows Device Manager
+servo = maestro.Controller('COM5', device=1)  # Phyz; Check COM port in Windows Device Manager
+#servo = maestro.Controller('COM3', device=2)  # Keith @ home; Check COM port in Windows Device Manager
 
 j = pygame.joystick.Joystick(0)   # Assume we only have 1
 j.init()
@@ -226,7 +226,7 @@ try:
             servo.setTarget(head_tilt_channel, curr_tilt + 5)
 
 
-        curr_left_pos = int(arm_left_axis * (arm_left_range[2] - arm_left_range[0]) + arm_left_range[0])
+        curr_left_pos = int((1-arm_left_axis) * (arm_left_range[2] - arm_left_range[0]) + arm_left_range[0])
         servo.setTarget(arm_left_channel, curr_left_pos)
         curr_right_pos = int(arm_right_axis * (arm_right_range[2] - arm_right_range[0]) + arm_right_range[0])
         servo.setTarget(arm_right_channel, curr_right_pos)
