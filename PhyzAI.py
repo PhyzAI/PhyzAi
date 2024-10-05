@@ -87,8 +87,10 @@ inSpeechRoutine = False
 # Presentation mode state variables
 inPresentationMode = False
 currentSlide = 0
-slideshowToPlay = "hydro4" # Set me to hardcode slideshow (uses the slideshow name from presentationconfig.xml)
-pConfig = PresentationConfig("presentationconfig.xml")
+slideshowToPlay = "script1" # Set me to hardcode slideshow (uses the slideshow name from presentationconfig.xml)
+pConfig = PresentationConfig("c:\\Users\\User\\Desktop\\PhyzAi\\presentationconfig.xml")
+#pConfig = PresentationConfig("presentationconfig.xml")
+
 currentSlideshow = SlideShow(pConfig.slideShows[slideshowToPlay])
 
 
