@@ -4,3 +4,5 @@ __pycache__/
 audiofile.wav
 .vs/
 build/
+*.csv
+openapi key.txt

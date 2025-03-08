@@ -113,7 +113,7 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
         response = ''
 
         # Say Speech Function
-        if question.startswith('Say'):
+        if question.startswith('Say') or question.startswith('fizz say') or question.startswith('Hey fizz say') or question.startswith('fizz, say') or question.startswith('Hey fizz, say'):
             print("Skipping gpt")
             regexp = re.compile("Say(.*)")
             toSay = regexp.search(question).group(1)
@@ -124,7 +124,7 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
             print("Skipping GPT")
             # speechPrompt =  re.compile("Fizz please(.*)").search(question).group(1)
             if "introduce yourself" in question.lower():
-                toSay = "Hi I'm Fizz AI, I really really loooovvvee Bahadir mwah XOXO"
+                toSay = "Hi I'm Fizz AI, an intergalactic traveler stuck on Earth and want to help new generations with Science, math and engineering."
         
         elif "dad joke" in question.lower() or "bad joke" in question.lower():
             print ("Picks a predetermined dad joke from a list")
