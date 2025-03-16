@@ -202,9 +202,10 @@ async def askWithWait():
             apologize()
             attempt = attempt + 1
             timeWait = timeWait + 30
-        if attempt == 6:
+        if attempt == 2:
             print("printing leaving")
             leavingNow()
+            slowTaskComplete = True
     try:
         await slowTask
         slowTaskComplete = False
@@ -403,6 +404,10 @@ def listen(OVERRIDE=False) -> None:
         # for index, name in enumerate(sr.Microphone.list_microphone_names()):
             # print("Microphone 7with name \"{1}\" found for `Microphone(device_index={0})`".format(index, name))
         print("Listening!") # You don't need this, but it's useful when debugging.
+        frequency = random.randint(200, 1000) # Set Frequency To 2500 Hertz
+        duration = 100 # Set Duration To 1000 ms == 1 second
+        winsound.Beep(frequency, duration)
+
         audio = r.listen(source, timeout=10)
 
     # Recognise the speech using Whisper API
