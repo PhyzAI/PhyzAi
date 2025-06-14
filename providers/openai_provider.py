@@ -33,11 +33,11 @@ def _query(model: str, system_prompt: str, user_prompt: str) -> str:
 
 async def query_4o(system_prompt: str, user_prompt: str) -> str:
     loop = asyncio.get_running_loop()
-    with concurrent.futures.ProcessPoolExecutor() as pool:
+    with concurrent.futures.ThreadPoolExecutor() as pool:
         return await loop.run_in_executor(pool, _query, "gpt-4o", system_prompt, user_prompt)
 
 
 async def query_35_turbo(system_prompt: str, user_prompt: str) -> str:
     loop = asyncio.get_running_loop()
-    with concurrent.futures.ProcessPoolExecutor() as pool:
+    with concurrent.futures.ThreadPoolExecutor() as pool:
         return await loop.run_in_executor(pool, _query, "gpt-3.5-turbo", system_prompt, user_prompt)
