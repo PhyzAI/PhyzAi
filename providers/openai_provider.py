@@ -1,14 +1,13 @@
 import asyncio
-import concurrent.futures
 import os
 import time
-from typing import NoReturn
+from typing import Never
 
 import openai
 from rich import print as rp
 
 
-def report_missing_api_key() -> NoReturn:
+def report_missing_api_key() -> Never:
     rp('[red][bold]Error: [/] No OpenAI api key provided; set the OPENAI_API_KEY environment variable.')
     raise ImportError("missing API key")
 
@@ -33,11 +32,15 @@ def _query(model: str, system_prompt: str, user_prompt: str) -> str:
 
 async def query_4o(system_prompt: str, user_prompt: str) -> str:
     loop = asyncio.get_running_loop()
-    with concurrent.futures.ThreadPoolExecutor() as pool:
-        return await loop.run_in_executor(pool, _query, "gpt-4o", system_prompt, user_prompt)
+    return await loop.run_in_executor(None, _query, "gpt-4o", system_prompt, user_prompt)
+
+query_4o.name_spoken = "ChatGPT 4 o"
+query_4o.name = "ChatGPT 4o"
 
 
 async def query_35_turbo(system_prompt: str, user_prompt: str) -> str:
     loop = asyncio.get_running_loop()
-    with concurrent.futures.ThreadPoolExecutor() as pool:
-        return await loop.run_in_executor(pool, _query, "gpt-3.5-turbo", system_prompt, user_prompt)
+    return await loop.run_in_executor(None, _query, "gpt-3.5-turbo", system_prompt, user_prompt)
+
+query_35_turbo.name_spoken = "ChatGPT 3.5 turbo"
+query_35_turbo.name = "ChatGPT 3.5 turbo"

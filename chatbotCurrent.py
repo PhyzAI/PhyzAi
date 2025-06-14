@@ -10,23 +10,42 @@ import re
 import time
 import winsound  # make beeping noises
 
-import openai  # OpenAI API library
 import pyttsx3  # pythons text to speech library
 import serial
 import speech_recognition as sr  # Speech recognition library
 import whisper
+from rich import print as rp
 
 import prompts  # The prompts for the chatbot
 from providers import openai_provider
 
 # Key for the openAI API - this is set as an environment variable: 
 # https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
-ACTIVE_PROVIDER = openai_provider.query_35_turbo
+providers = [
+    openai_provider.query_4o,
+    openai_provider.query_35_turbo,
+]
+provider_idx = 0
+
+
+def get_current_provider():
+    return providers[provider_idx]
+
 
 # initialize text to speach
 engine = pyttsx3.init()
 engine.setProperty('rate', 200)
 engine.setProperty('volume', 1)
+
+
+async def next_provider():
+    global provider_idx
+    provider_idx += 1
+    provider_idx %= len(providers)
+    engine.say(get_current_provider().name_spoken)
+    engine.runAndWait()
+    engine.stop()
+
 
 whisperModel = whisper.load_model("tiny.en")
 
@@ -239,6 +258,10 @@ def controller():
         leavingNow()
         speak(toSay)
         exit()
+    elif serialData == '6':
+        rp('[bright_yellow]Switching providers.[/]')
+        asyncio.run(next_provider())
+        rp(f'[bright_green]New provider is [bold]{get_current_provider().name}[/][/]')
 
 
 # This function plays the output we get back from the API.
