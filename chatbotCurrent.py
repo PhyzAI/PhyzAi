@@ -73,10 +73,6 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
     slowTaskComplete = False
     serialObj.timeout = 0
 
-# Bahadir digital out for mouth
-#    serialObj.pinMode(8, OUTPUT)
-#    serialObj.digitalWrite(8, HIGH)
-
 
     """Sends a question to the openAI API and returns the answer. Set OVERRIDE to True to override constraints on the answer."""
     # If the override is set, select the more general prompt.
@@ -87,7 +83,6 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
     else:
         prompt = prompts.MAINPROMPT
 
-    #print("before AI")
     # Open a request to openai
     print("actually asking")
     frequency = random.randint(200, 1000) # Set Frequency To 2500 Hertz
@@ -98,59 +93,88 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
     duration = 100 # Set Duration To 1000 ms == 1 second
     winsound.Beep(frequency, duration)
     currentSerial = serialObj.read().decode('ascii')
-    #if (serialObj.read().decode('ascii') == '3'):
-    if (currentSerial == '5'):
-        print("that was bad")
-        thatwasbad()
-        toSay = ""
-        stopped = True
+
+    print("asking")
+    print(currentSerial)
+    question = question.lstrip()
+    print(question)
+    response = ''
+
+    # Say Speech Function
+    if question.startswith('Say') or question.startswith('fizz say') or question.startswith('Hey fizz say') or \
+    question.startswith('fizz, say') or question.startswith('Hey fizz, say') or question.startswith("this, say"):
+        print("Skipping GPT")
+        regexp = re.compile("Say(.*)")
+        toSay = regexp.search(question).group(1)
+        print(toSay)
         slowTaskComplete = True
-    else:
-        print("asking")
-        print(currentSerial)
-        question = question.lstrip()
-        print(question)
-        response = ''
 
-        # Say Speech Function
-        if question.startswith('Say') or question.startswith('fizz say') or question.startswith('Hey fizz say') or question.startswith('fizz, say') or question.startswith('Hey fizz, say'):
-            print("Skipping gpt")
-            regexp = re.compile("Say(.*)")
-            toSay = regexp.search(question).group(1)
-            print(toSay)
             
-        # # Phyz Please ...... speech functions
-        elif question.lower().startswith('fizz please') or question.lower().startswith('fizz, please') or question.lower().startswith('this, please'):
-            print("Skipping GPT")
-            # speechPrompt =  re.compile("Fizz please(.*)").search(question).group(1)
-            if "introduce yourself" in question.lower():
-                toSay = "Hi I'm Fizz AI, an intergalactic traveler stuck on Earth and want to help new generations with Science, math and engineering."
+    # # Phyz Please ...... speech functions
+    elif question.lower().startswith('fizz please') or question.lower().startswith('fizz, please') or \
+    question.lower().startswith('this, please') or question.lower().startswith("please introduce yourself"):
+        print("Skipping GPT")
+        if "introduce yourself" in question.lower():
+            toSay = "Welcome to The Fizz AI Project. "\
+            "I am Fizz, your friendly, futuristic AI companion and the central intelligence " \
+            "of The Fizz AI Project, a mission where creativity collides with code, imagination " \
+            "meets engineering, and education is re-imagined, one spark at a time. " \
+            "Today, I welcome you not just as guests, but as potential co-creators in " \
+            "a movement that blends robotics, artificial intelligence, and community outreach to " \
+            "inspire and empower the next generation of STEAM leaders. " \
+            "At the core of our mission is building real-world experiences that are hands-on, " \
+            "minds-on, and purpose-driven. And we have big plans. Around me is a growing robotic " \
+            "family, a team of machines and minds with personalities, quirks, and potential, each " \
+            "in their own phase of becoming. " \
+            "Tugg – our utility robot, strong in frame but still finding form. Arachne – a six-legged " \
+            "wonder, currently in need of tweaks, energy, and a little love. "\
+            "And still on the drawing board? A BB8-style explorer bot, Blart-sized rideable " \
+            "vehicles, And Lego-based tabletop battle bots! "\
+            "Each of these bots is a chapter in our story. And the next chapter? That’s where " \
+            "you come in. We are inviting passionate volunteers—engineers, tinkerers, coders, " \
+            "creatives, fundraisers, educators, and explorers to help us to: Build and prototype new " \
+            "robots, Debug and upgrade existing systems, Expand the reach of AI into creative and " \
+            "educational realms, Seek out out-reach opportunities in schools and communities, And help " \
+            "fuel the project through fundraising and partnerships. " \
+            "The Fizz AI Project is more than machines. It’s a platform. A launchpad. A " \
+            "living lab where ideas evolve into inventions, and curiosity is never optional. " \
+            "If you’ve ever wanted to shape the future of education, if you've ever dreamed of giving " \
+            "students tools that spark wonder and confidence, then you're in the right place.  " \
+            "So let's tinker, build, experiment, and problem-solve—together. The lab is open. The " \
+            "future is calling. Welcome to The Fizz AI Project. Let’s make it move. "
+
+            # toSay = "Hi I'm Fizz AI, an intergalactic traveler stuck on Earth and want to help new generations with Science, " \
+            # "math and engineering. All of this can of course be replaced by some real text that you would like to put here. In fact," \
+            # "it would be even better if we created a file that Fizz reads here and then vocalizes."
+            slowTaskComplete = True
+
         
-        elif "dad joke" in question.lower() or "bad joke" in question.lower():
-            print ("Picks a predetermined dad joke from a list")
-            toSay = getDadJoke()
+    elif "dad joke" in question.lower() or "bad joke" in question.lower():
+        print ("Picks a predetermined dad joke from a list")
+        toSay = getDadJoke()
+        slowTaskComplete = True
 
-        # Run ChatGPT response
-        else:
-            print("Asking ChatGPT")
-            start_time = time.perf_counter()
-            response = openai.ChatCompletion.create(
-                # Select the model to answer the question. 3.5 is cheap and fast. 
-                # 4 would offer better answers, but is much more expensive.
-                model="gpt-3.5-turbo",
 
-                # Set the personality of the bot. The 'system' role tells the bot who it is.
-                # The 'user' role is the question the user has asked.
-                messages= [
-                    {"role":"system",
-                        "content":prompt},
-                    {"role":"user","content":question}
-                ]
-            )
+    # Run ChatGPT response
+    else:
+        print("Asking ChatGPT")
+        start_time = time.perf_counter()
+        response = openai.ChatCompletion.create(
+            # Select the model to answer the question
+            model="gpt-4o",
+
+            # Set the personality of the bot. The 'system' role tells the bot who it is.
+            # The 'user' role is the question the user has asked.
+            messages= [
+                {"role":"system",
+                    "content":prompt},
+                {"role":"user","content":question}
+            ]
+        )
             
-            end_time = time.perf_counter()
-            print(f"Total request duration: {end_time-start_time} seconds")
-            toSay = response['choices'][0]['message']['content']
+        end_time = time.perf_counter()
+        print(f"Total request duration: {end_time-start_time} seconds")
+        toSay = response['choices'][0]['message']['content']
 
 
         # If you set the DEBUG flag to True, it will print the whole response here.
@@ -178,8 +202,6 @@ async def beeps():
         winsound.Beep(frequency, duration)
         #controller()
 
-        #await(SlowTask)
-        #await asyncio.sleep(timeWait)
 
 async def askWithWait():
     print("in ask with wait")
@@ -188,24 +210,23 @@ async def askWithWait():
     global beepTask
     global timeWait
 
-    timeWait = 15
+    timeWait = 10
     startTime = time.time()
     attempt = 1
     slowTask = asyncio.create_task(ask(recognised_speech))
     while not slowTaskComplete:
         await asyncio.sleep(0)
-        #print(time.time() - startTime)
-        #print(slowTaskComplete)
         if slowTaskComplete:
             break
         elif (time.time() - startTime) >= timeWait:
             apologize()
             attempt = attempt + 1
-            timeWait = timeWait + 30
-        if attempt == 2:
+            timeWait = timeWait + 10
+        if attempt == 3:
             print("printing leaving")
-            leavingNow()
-            slowTaskComplete = True
+            speak("Communication channels seem to be having issues. Let us try another question please.")
+            slowTask.cancel()
+            return
     try:
         await slowTask
         slowTaskComplete = False
@@ -221,33 +242,17 @@ def controller():
     serialObj.timeout = None
     serialData = serialObj.read().decode('ascii')
 
-    #if (serialObj.inWaiting() > 0):
-    #print(serialObj.read().decode('ascii'))
     if (serialData == '4'):
         print("in 4")
         print("saw button press")
         listen()
-
-    #Bahadir 20240317 - stop answering if 3 is pressed
-    if(stopped == True):
-        stopped = False
-    elif (serialData == '3'):
-        print("in 3")
-        print("saying response to innapropriate question")
-        thatwasbad()
+        speak(toSay)
     elif (serialData == '5'):
         print("in 5")
         print("saying leaving response")
         leavingNow()
-    elif (serialData == '3'):
-        if(firstInnapropriate == False):  
-            print("in 3")
-            print("saying response to innapropriate question")
-            thatwasbad()
-        else:
-            firstInnapropriate = False
-    else:
         speak(toSay)
+        exit()
 
 # This function plays the output we get back from the API.
 def speak(text: str) -> None:
@@ -279,19 +284,26 @@ def speak(text: str) -> None:
         current_data = [today, timeString, text]
         csv_writer.writerow(current_data)
     
-    # time.sleep(0)
-# Bahadir digital out for mouth
+    # print("Debug - before serial read")
+    serialObj.timeout = 0
+    serialData = serialObj.read().decode('ascii')
+    # print("Debug - after serial read")
+
+    # Bahadir digital out for mouth
     serialObj.write(HIGH_COMMAND)
     serialObj.flush()
 
-    engine.say(text)
-    engine.runAndWait()
-    engine.stop()
+    if (serialData == '3'):
+        print("in 3")
+        print("saying response to innapropriate question - final")
+        thatwasbad()
+    else:
+        engine.say(text)
+        engine.runAndWait()
+        engine.stop()
 
     serialObj.write(LOW_COMMAND)
     serialObj.flush()
-# Bahadir digital out for mouth
-#    serialObj.digitalWrite(8, LOW)
 
     inSpeaking = False
     return
@@ -361,15 +373,14 @@ def thatwasbad():
 # say leaving joke
 def leavingNow():
     global leaving
+    global toSay
 
     print("leaving now")
     random_jokes = random.randint(0, len(leaving)-1)
 
     left = "".join(leaving[random_jokes])
 
-    speak(left)
-    speak("I hope to see you all again soon, make sure to come check out my website and follow me on social media!")
-    #print(joke)
+    toSay = left + "I hope to see you all again soon, make sure to check out my website"
 
 #Bahadir 20240317 - tell a dad joke
 def getDadJoke():
@@ -468,10 +479,10 @@ if __name__ == "__main__":
     loadleaving()
     loadInnapropriate()
     loadDadJokes()
-    #try:
-    print("Welcome to Phyz AI, press 4 to ask a question or 5 to stop the question and 3 to leave")
-#Bahadir debug
-    print("Bahadir 1.8")
+
+    print("Welcome to Phyz AI, press 4 to ask a question or 3 to stop the question and 5 to leave")
+    #Bahadir debug
+    print("Bahadir 20250322")
 
 
     while True:
