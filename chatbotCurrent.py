@@ -39,6 +39,9 @@ leaving = []
 # init innapropriate responses
 innapropriate = []
 
+say_command = re.compile(r'^(?:hey )?(?:phyz|fizz|this),? say (.*)$', re.IGNORECASE)
+please_command = re.compile(r'^(?:phyz|fizz|this),? please', re.IGNORECASE)
+
 toSay = ''
 recognised_speech = ''
 slowTaskComplete = False
@@ -101,18 +104,15 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
     response = ''
 
     # Say Speech Function
-    if question.startswith('Say') or question.startswith('fizz say') or question.startswith('Hey fizz say') or \
-    question.startswith('fizz, say') or question.startswith('Hey fizz, say') or question.startswith("this, say"):
+    if (match := say_command.match(question)) is not None:
         print("Skipping GPT")
-        regexp = re.compile("Say(.*)")
-        toSay = regexp.search(question).group(1)
+        toSay = match.group(1)
         print(toSay)
         slowTaskComplete = True
 
             
     # # Phyz Please ...... speech functions
-    elif question.lower().startswith('fizz please') or question.lower().startswith('fizz, please') or \
-    question.lower().startswith('this, please') or question.lower().startswith("please introduce yourself"):
+    elif please_command.match(question) or question.lower().startswith("please introduce yourself"):
         print("Skipping GPT")
         if "introduce yourself" in question.lower():
             toSay = "Welcome to The Fizz AI Project. "\
@@ -272,12 +272,8 @@ def speak(text: str) -> None:
     if not os.path.exists("answers"):
         os.makedirs("answers")
 
-    # check and make todays csv
-    if not os.path.exists("answers\%s.csv" % (today)):
-        open("%s.csv" % (today), 'a').close()
-
     # append current question to the csv
-    with open("answers\%s.csv" % (today),"a",newline="") as answers:
+    with open("answers\%s.csv" % (today) ,"a",newline="") as answers:
         # creating writer object
         csv_writer=csv.writer(answers)
         # appending data
@@ -449,10 +445,6 @@ def listen(OVERRIDE=False) -> None:
         if not os.path.exists("questions"):
             os.makedirs("questions")
 
-        # check and make todays csv
-        if not os.path.exists("questions\%s.csv" % (today)):
-            open("%s.csv" % (today), 'a').close()
-
         # append current question to the csv
         with open("questions\%s.csv" % (today),"a",newline="") as questions:
             # creating writer object
@@ -460,6 +452,7 @@ def listen(OVERRIDE=False) -> None:
             # appending data
             current_data = [today, timeString, recognised_speech]
             csv_writer.writerow(current_data)
+
         # Handle the response from the API. If OVERRIDE is set, use the more general prompt.
         # Speak takes the audio, calls the API, and plays the response.
         if OVERRIDE:
