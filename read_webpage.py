@@ -85,10 +85,10 @@ url = "https://rise4steam.org/the-blarts.html"
 website_text = read_website_text(url)
 
 # List available voices
-list_available_voices()
+#list_available_voices()
 
 # Convert text to speech (using first voice by default)
-text_to_speech(website_text)
+#text_to_speech(website_text)
 
 # Example of using different voices:
 # text_to_speech(website_text, voice_index=1)  # Use second voice
