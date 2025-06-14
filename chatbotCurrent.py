@@ -17,10 +17,11 @@ import speech_recognition as sr  # Speech recognition library
 import whisper
 
 import prompts  # The prompts for the chatbot
+from providers import openai_provider
 
 # Key for the openAI API - this is set as an environment variable: 
 # https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
-openai.api_key = os.environ["OPENAI_API_KEY"]
+ACTIVE_PROVIDER = openai_provider.query_4o
 
 # initialize text to speach
 engine = pyttsx3.init()
@@ -159,23 +160,7 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
     # Run ChatGPT response
     else:
         print("Asking ChatGPT")
-        start_time = time.perf_counter()
-        response = openai.ChatCompletion.create(
-            # Select the model to answer the question
-            model="gpt-4o",
-
-            # Set the personality of the bot. The 'system' role tells the bot who it is.
-            # The 'user' role is the question the user has asked.
-            messages=[
-                {"role": "system",
-                 "content": prompt},
-                {"role": "user", "content": question}
-            ]
-        )
-
-        end_time = time.perf_counter()
-        print(f"Total request duration: {end_time - start_time} seconds")
-        toSay = response['choices'][0]['message']['content']
+        toSay = await ACTIVE_PROVIDER(prompt, question)
 
         # If you set the DEBUG flag to True, it will print the whole response here.
         # This is useful for seeing how many tokens the response cost.
@@ -310,7 +295,7 @@ def speak(text: str) -> None:
 
 # Bahadir 20240317 - load the dad jokes from the file
 def loadDadJokes():
-    with open("dadJokes.txt", encoding="utf-8") as f:
+    with open("data/dadJokes.txt", encoding="utf-8") as f:
         lines = f.readlines()
 
     for l in lines:
@@ -321,7 +306,7 @@ def loadDadJokes():
 def loadApologies():
     global apologies
 
-    with open("apologies.txt", encoding="utf-8") as f:
+    with open("data/apologies.txt", encoding="utf-8") as f:
         lines = f.readlines()
 
     for l in lines:
@@ -332,7 +317,7 @@ def loadApologies():
 def loadleaving():
     global leaving
 
-    with open("leaving.txt", encoding="utf-8") as f:
+    with open("data/leaving.txt", encoding="utf-8") as f:
         lines = f.readlines()
 
     for l in lines:
@@ -342,7 +327,7 @@ def loadleaving():
 def loadInnapropriate():
     global innapropriate
 
-    with open("innapropriate.txt", encoding="utf-8") as f:
+    with open("data/innapropriate.txt", encoding="utf-8") as f:
         lines = f.readlines()
 
     for l in lines:

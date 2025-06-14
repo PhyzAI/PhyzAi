@@ -51,3 +51,4 @@ whisper-mic==0.0.1
 yarl==1.9.2
 zipp==3.15.0
 pyfirmata==1.1.0
+rich==14.0.0
