@@ -244,12 +244,12 @@ def controller():
     serialObj.timeout = None
     serialData = serialObj.read().decode('ascii')
 
-    if (serialData == '4'):
+    if serialData == '4':
         print("in 4")
         print("saw button press")
         listen()
         speak(toSay)
-    elif (serialData == '5'):
+    elif serialData == '5':
         print("in 5")
         print("saying leaving response")
         leavingNow()
@@ -276,7 +276,7 @@ def speak(text: str) -> None:
         os.makedirs("answers")
 
     # append current question to the csv
-    with open("answers\%s.csv" % (today), "a", newline="", encoding='utf-8') as answers:
+    with open("answers/%s.csv" % today, "a", newline="", encoding='utf-8') as answers:
         # creating writer object
         csv_writer = csv.writer(answers)
         # appending data
@@ -292,7 +292,7 @@ def speak(text: str) -> None:
     serialObj.write(HIGH_COMMAND)
     serialObj.flush()
 
-    if (serialData == '3'):
+    if serialData == '3':
         print("in 3")
         print("saying response to innapropriate question - final")
         thatwasbad()
@@ -457,7 +457,7 @@ def listen(OVERRIDE=False) -> None:
             os.makedirs("questions")
 
         # append current question to the csv
-        with open("questions\%s.csv" % (today), "a", newline="", encoding='utf-8') as questions:
+        with open("questions/%s.csv" % today, "a", newline="", encoding='utf-8') as questions:
             # creating writer object
             csv_writer = csv.writer(questions)
             # appending data
