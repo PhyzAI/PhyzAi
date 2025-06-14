@@ -21,7 +21,7 @@ from providers import openai_provider
 
 # Key for the openAI API - this is set as an environment variable: 
 # https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety
-ACTIVE_PROVIDER = openai_provider.query_4o
+ACTIVE_PROVIDER = openai_provider.query_35_turbo
 
 # initialize text to speach
 engine = pyttsx3.init()
@@ -159,7 +159,6 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
 
     # Run ChatGPT response
     else:
-        print("Asking ChatGPT")
         toSay = await ACTIVE_PROVIDER(prompt, question)
 
         # If you set the DEBUG flag to True, it will print the whole response here.
