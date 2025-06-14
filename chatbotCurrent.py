@@ -178,7 +178,7 @@ async def ask(question: str, DEBUG=False, OVERRIDE=False):
 
     # Run ChatGPT response
     else:
-        toSay = await ACTIVE_PROVIDER(prompt, question)
+        toSay = await get_current_provider()(prompt, question)
 
         # If you set the DEBUG flag to True, it will print the whole response here.
         # This is useful for seeing how many tokens the response cost.
