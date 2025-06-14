@@ -276,7 +276,7 @@ def speak(text: str) -> None:
         os.makedirs("answers")
 
     # append current question to the csv
-    with open("answers\%s.csv" % (today), "a", newline="") as answers:
+    with open("answers\%s.csv" % (today), "a", newline="", encoding='utf-8') as answers:
         # creating writer object
         csv_writer = csv.writer(answers)
         # appending data
@@ -457,7 +457,7 @@ def listen(OVERRIDE=False) -> None:
             os.makedirs("questions")
 
         # append current question to the csv
-        with open("questions\%s.csv" % (today), "a", newline="") as questions:
+        with open("questions\%s.csv" % (today), "a", newline="", encoding='utf-8') as questions:
             # creating writer object
             csv_writer = csv.writer(questions)
             # appending data
