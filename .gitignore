@@ -6,3 +6,4 @@ audiofile.wav
 build/
 *.csv
 openapi key.txt
+.idea/
