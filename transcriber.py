@@ -34,8 +34,6 @@ def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=
 
         is_speech = vad.is_speech(audio_bytes, sample_rate)
 
-        print(f'Speaking: {len([f for f, speech in ring_buffer if speech])}')
-
         if not triggered:
             ring_buffer.append((audio_bytes, is_speech))
             num_voiced = len([f for f, speech in ring_buffer if speech])
