@@ -9,7 +9,7 @@ output_path = 'en-us.wav'
 
 # Placeholder for TTS (Text-to-Speech) functionality
 def speak(text):
-    model.tts(text, speaker_ids['EN-US'], output_path, speed=speed)
+    model.tts_to_file(text, speaker_ids['EN-US'], output_path, speed=speed)
     samplerate, data = wavfile.read(output_path)
     sd.play(data, samplerate)
     sd.wait()
