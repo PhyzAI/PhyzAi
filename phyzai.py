@@ -1,5 +1,5 @@
 from transcriber import record_until_silence, transcribe_audio
-from chatgpt_interface import ask_chatgpt
+from transcribe2gpt import ask_chatgpt
 import whisper
 from dadjokes import DadJokes
 from apologies import Apologies
