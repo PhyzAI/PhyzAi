@@ -2,7 +2,7 @@ from melo.api import TTS
 import sounddevice as sd
 from scipy.io import wavfile
 
-speed = 0.6
+speed = 1.0
 model = TTS(language='EN', device='auto')
 speaker_ids = model.hps.data.spk2id
 output_path = 'en-us.wav'
