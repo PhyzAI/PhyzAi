@@ -1,0 +1,7 @@
+openai
+whisper
+webrtcvad
+sounddevice
+scipy
+numpy
+python-dotenv  # if using .env
