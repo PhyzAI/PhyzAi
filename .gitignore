@@ -9,3 +9,4 @@ openapi key.txt
 .idea/
 temp_audio.wav
 en-us.wav
+rendered_*/

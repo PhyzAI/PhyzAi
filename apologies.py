@@ -1,12 +1,12 @@
+import glob
 import random
 
 class Apologies:
-    def __init__(self, filename="apologies.txt"):
-        self.apologies = self.load_apologies(filename)
+    def __init__(self, folder="baked_apologies"):
+        self.apologies = self.load_apologies(folder)
 
-    def load_apologies(self, filename):
-        with open(filename, "r", encoding="utf-8") as f:
-            return [line.strip() for line in f if line.strip()]
+    def load_apologies(self, folder):
+        return glob.glob(f'{folder}/*.wav')
 
     def get_random_apology(self):
         if not self.apologies:

@@ -5,3 +5,4 @@ sounddevice
 scipy
 numpy
 python-dotenv  # if using .env
+rich

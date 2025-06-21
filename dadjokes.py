@@ -1,14 +1,13 @@
+import glob
 import random
 
 class DadJokes:
-    def __init__(self, filename="dadJokes.txt"):
-        self.jokes = self.load_jokes(filename)
+    def __init__(self, folder="baked_dadJokes"):
+        self.jokes = self.load_jokes(folder)
         self.just_told_joke = False
 
-    def load_jokes(self, filename):
-        with open(filename, "r", encoding="utf-8") as f:
-            jokes = [line.strip() for line in f if line.strip()]
-        return jokes
+    def load_jokes(self, folder):
+        return glob.glob(f'{folder}/*.wav')
 
     def get_random_joke(self):
         if not self.jokes:
