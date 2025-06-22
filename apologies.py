@@ -1,19 +1,20 @@
-import glob
 import random
+from pathlib import Path
+
+import bakery
+
 
 class Apologies:
-    def __init__(self, folder="baked_apologies"):
-        self.apologies = self.load_apologies(folder)
+    def __init__(self, bakery_file="baked_apologies.json"):
+        self.apologies_file = bakery.deserialize_bakery(Path(bakery_file))
+        self.apologies = list(self.apologies_file.items.values())
 
-    def load_apologies(self, folder):
-        return glob.glob(f'{folder}/*.wav')
-
-    def get_random_apology(self):
+    def get_random_apology(self) -> bakery.BakeryRecord | None:
         if not self.apologies:
-            return "I'm really sorry, but I don't have any apologies right now!"
+            return None
         return random.choice(self.apologies)
 
-    def handle_apology_request(self, text):
+    def handle_apology_request(self, text) -> bakery.BakeryRecord | None:
         normalized = text.lower().strip(".!? ")
 
         # Very simple keyword-based trigger

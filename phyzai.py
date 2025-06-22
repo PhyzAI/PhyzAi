@@ -1,3 +1,5 @@
+from io import BytesIO
+
 import sounddevice as sd
 import whisper
 from scipy.io import wavfile
@@ -16,8 +18,9 @@ SYSTEM_PROMPT = (
 )
 
 
-def play_wav(path: str):
-    samplerate, data = wavfile.read(path)
+def play_wav(raw: bytes):
+    with BytesIO(raw) as filelike:
+        samplerate, data = wavfile.read(filelike)
     sd.play(data, samplerate)
     sd.wait()
 
@@ -49,13 +52,13 @@ def main():
         #############################################################
         if dad_jokes.should_tell_another(normalized):
             joke = dad_jokes.get_random_joke()
-            print(f"PHYZAI: {joke}")
-            play_wav(joke)
+            print(f"PHYZAI: playing {joke.text}")
+            play_wav(joke.raw)
             continue
         elif dad_jokes.is_joke_request(normalized) and normalized not in ["tell another", "another"]:
             joke = dad_jokes.get_random_joke()
-            print(f"PHYZAI: {joke}")
-            play_wav(joke)
+            print(f"PHYZAI: {joke.text}")
+            play_wav(joke.raw)
             continue
         else:
             # Reset joke flag only if input is NOT joke related
@@ -66,8 +69,8 @@ def main():
         #############################################################
         apology_response = apologies.handle_apology_request(transcription)
         if apology_response:
-            print(f"PHYZAI: {apology_response}")
-            play_wav(apology_response)
+            print(f"PHYZAI: {apology_response.text}")
+            play_wav(apology_response.raw)
             continue
 
         # Otherwise normal GPT response

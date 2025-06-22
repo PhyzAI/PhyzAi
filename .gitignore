@@ -10,3 +10,4 @@ openapi key.txt
 temp_audio.wav
 en-us.wav
 rendered_*/
+baked_*.json

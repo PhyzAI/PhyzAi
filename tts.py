@@ -6,7 +6,10 @@ from scipy.io import wavfile
 
 speed = 1.0
 model = TTS(language='EN', device='auto')
-speaker_ids = model.hps.data.spk2id
+try:
+    speaker_ids = model.hps.base64.spk2id
+except AttributeError:
+    speaker_ids = model.hps.data.spk2id
 output_path = 'en-us.wav'
 
 

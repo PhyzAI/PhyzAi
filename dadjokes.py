@@ -1,17 +1,18 @@
-import glob
 import random
+from pathlib import Path
+
+import bakery
+
 
 class DadJokes:
-    def __init__(self, folder="baked_dadJokes"):
-        self.jokes = self.load_jokes(folder)
+    def __init__(self, bakery_file="baked_dadJokes.json"):
+        self.joke_file = bakery.deserialize_bakery(Path(bakery_file))
+        self.jokes = list(self.joke_file.items.values())
         self.just_told_joke = False
 
-    def load_jokes(self, folder):
-        return glob.glob(f'{folder}/*.wav')
-
-    def get_random_joke(self):
+    def get_random_joke(self) -> bakery.BakeryRecord | None:
         if not self.jokes:
-            return "Sorry, no jokes available!"
+            return None
         self.just_told_joke = True
         return random.choice(self.jokes)
 
