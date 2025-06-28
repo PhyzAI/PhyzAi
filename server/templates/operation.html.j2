@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='phyz.css') }}">
+</head>
+<body>
+<h2>Operation completed</h2>
+<a href="{{ url_for('homepage') }}">back to dashboard</a>
+<pre>
+{{ output }}
+</pre>
+</body>
+</html>

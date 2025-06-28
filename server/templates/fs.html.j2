@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File listing of {{ path }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='phyz.css') }}">
+</head>
+<body>
+<a href="{{ url_for('homepage') }}">back to dashboard</a>
+<h1>fs: <code>{{ path }}</code></h1>
+<ul>
+{% if parent %}
+    <li><a href="{{ link_parent }}">up to previous folder</a></li>
+{% endif %}
+{% for file, link in files %}
+    <li><a href="{{ link }}">{{ file }}</a></li>
+{% endfor %}
+{% if files|length == 0 %}
+	<li>(empty)</li>
+{% endif %}
+</ul>
+</body>
+</html>

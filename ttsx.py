@@ -24,4 +24,3 @@ def speak(text: str):
     engine.say(text)
     engine.runAndWait()
     engine.stop()
-

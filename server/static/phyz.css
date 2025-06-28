@@ -1,0 +1,24 @@
+body {
+    font-family: sans-serif;
+}
+
+ul > li::marker {
+    content: "→ ";
+}
+
+code {
+    display: inline-block;
+    padding: 2px 0;
+    background: #00000020;
+}
+
+pre {
+    padding: 8px;
+    border-radius: 4px;
+    background: #000000b0;
+    color: white;
+}
+
+* {
+    box-sizing: border-box;
+}
