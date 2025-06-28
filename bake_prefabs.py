@@ -4,13 +4,15 @@ from re import sub
 
 from rich.progress import track
 
-import tts
+from OPTIONS import TTS_SRC, TTS
+import OPTIONS
 from bakery import *
 
-tts_write = tts.write
+tts_write = TTS.write
 DEPENDS_ON_SOURCES = [
     __file__,
-    tts.__file__
+    OPTIONS.__file__,
+    TTS_SRC
 ]
 
 

@@ -8,7 +8,9 @@ from apologies import Apologies
 from dadjokes import DadJokes
 from transcribe2gpt import ask_chatgpt
 from transcriber import record_until_silence, transcribe_audio
-from tts import speak
+from OPTIONS import TTS
+
+speak = TTS.speak
 
 SYSTEM_PROMPT = (
     "You are now phyzai. You are an educational robot designed for kids listening to their speech. "
