@@ -39,7 +39,7 @@ def main():
         result = subprocess.run(['git', 'pull'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         return render_template('operation.html.j2', output=result.stdout.decode('utf-8'))
 
-    app.run()
+    app.run(host='0.0.0.0', port=8001)
 
 
 if __name__ == '__main__':
