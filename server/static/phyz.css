@@ -19,6 +19,28 @@ pre {
     color: white;
 }
 
+.proc-state {
+    width: fit-content;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.proc-state[data-state="loading"] {
+    background-color: #ffffb0;
+}
+
+.proc-state[data-state="running"] {
+    background-color: #80b0ff;
+}
+
+.proc-state[data-state="success"] {
+    background-color: #b0ffb0;
+}
+
+.proc-state[data-state="failure"] {
+    background-color: #ffb0b0;
+}
+
 * {
     box-sizing: border-box;
 }
