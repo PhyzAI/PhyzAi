@@ -2,7 +2,7 @@ import os
 import subprocess
 from pathlib import Path
 
-from flask import Flask, render_template, url_for, send_file
+from flask import Flask, render_template, url_for, send_file, request
 
 
 def main():
@@ -36,8 +36,18 @@ def main():
 
     @app.route('/sync')
     def synchronize():
-        result = subprocess.run(['git', 'pull'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        return render_template('operation.html.j2', output=result.stdout.decode('utf-8'))
+        is_force = request.args.get('force')
+        text = ''
+        if is_force == 'True':
+            result = subprocess.run(['git', 'fetch'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            text += result.stdout.decode('utf-8')
+            result = subprocess.run(['git', 'reset', '--hard', 'origin/develop'],
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            text += result.stdout.decode('utf-8')
+        else:
+            result = subprocess.run(['git', 'pull'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            text += result.stdout.decode('utf-8')
+        return render_template('operation.html.j2', output=text)
 
     app.run(host='0.0.0.0', port=8001)
 
