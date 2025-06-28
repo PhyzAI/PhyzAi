@@ -49,7 +49,7 @@ def main():
             text += result.stdout.decode('utf-8')
         return render_template('operation.html.j2', output=text)
 
-    app.run(host='0.0.0.0', port=8001)
+    app.run(host='0.0.0.0', port=8001, debug=True)
 
 
 if __name__ == '__main__':
