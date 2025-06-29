@@ -30,14 +30,22 @@ window.addEventListener("load", async () => {
         return
     }
 
+    const started = Date.now()
+
     async function iterate() {
         const data = await getData(pid)
+        if (data == null) {
+            invalid()
+            return
+        }
 
         const exitcode = data.exitcode
+        const out = data.stdout
 
-        if (!exitcode) {
+        if (exitcode === false) {
             state.dataset.state = "running"
             state.innerHTML = "Running..."
+            setTimeout(iterate, 100)
         } else {
             if (exitcode === 0) {
                 state.dataset.state = "success"
@@ -46,8 +54,18 @@ window.addEventListener("load", async () => {
             }
             state.innerHTML = `Completed with exit code ${exitcode}`
         }
-
-        setTimeout(iterate, 250)
+        const isEmpty = out.length === 0
+        if (isEmpty) {
+            const duration = Date.now() - started
+            output.classList.add("-no-output")
+            if (exitcode === false)
+                output.innerText = `No output yet... ${Math.round(duration / 100) / 10}s`
+            else
+                output.innerText = `Command produced no output`
+        } else {
+            output.classList.remove("-no-output")
+            output.innerText = out
+        }
     }
     await iterate()
 })

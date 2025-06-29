@@ -1,10 +1,11 @@
 import os
+import shlex
 import subprocess
 import threading
 from collections import defaultdict
 from pathlib import Path
 
-from flask import Flask, render_template, url_for, send_file, request
+from flask import Flask, render_template, url_for, send_file, request, redirect
 
 
 def main():
@@ -53,6 +54,8 @@ def main():
             proc.stdout.close()
 
         th = threading.Thread(target=watcher)
+        th.daemon = True
+        th.start()
 
         return this_id
 
@@ -60,20 +63,11 @@ def main():
     def procmon():
         return render_template('operation.html.j2')
 
-    @app.route('/sync')
-    def synchronize():
-        is_force = request.args.get('force')
-        text = ''
-        if is_force == 'True':
-            result = subprocess.run(['git', 'fetch'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            text += result.stdout.decode('utf-8')
-            result = subprocess.run(['git', 'reset', '--hard', 'origin/develop'],
-                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            text += result.stdout.decode('utf-8')
-        else:
-            result = subprocess.run(['git', 'pull'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            text += result.stdout.decode('utf-8')
-        return render_template('operation.html.j2', output=text)
+    @app.route('/git/<command>')
+    def gitcmd(command: str):
+        broke_command = shlex.split(command)
+        result = launch_proc(['git'] + broke_command)
+        return redirect(url_for('procmon', pid=result))
 
     @app.route('/proclog/<int:proc_id>')
     def get_proclog(proc_id: int):
@@ -82,9 +76,12 @@ def main():
             return {
                 "error": f"ProcID {proc_id} not found"
             }, 404
+        exc = proc.poll()
+        if exc is None:
+            exc = False
         return {
-            "exitcode": proc.poll() or False,
-            "out": proc.stdout.rea,
+            "exitcode": exc,
+            "stdout": proc_cache[proc_id].decode('utf-8'),
         }
 
     app.run(host='0.0.0.0', port=8001, debug=True)

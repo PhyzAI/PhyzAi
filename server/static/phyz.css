@@ -1,5 +1,24 @@
+html {
+    display: flex;
+    justify-content: center;
+    background: #101010;
+}
+
 body {
     font-family: sans-serif;
+    min-width: 60em;
+    background: #202020;
+    padding: 16px;
+    margin: 0;
+    min-height: 100vh;
+    color: white;
+}
+
+a {
+    color: #80b0ff;
+}
+a:visited {
+    color: #b0b0ff;
 }
 
 ul > li::marker {
@@ -12,17 +31,21 @@ code {
     background: #00000020;
 }
 
-pre {
+#output {
     padding: 8px;
     border-radius: 4px;
     background: #000000b0;
     color: white;
+}
+#output.-no-output {
+    color: #bbbbbb;
 }
 
 .proc-state {
     width: fit-content;
     padding: 8px;
     border-radius: 4px;
+    color: #000000;
 }
 
 .proc-state[data-state="loading"] {
