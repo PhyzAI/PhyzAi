@@ -6,7 +6,7 @@ from scipy.io import wavfile
 
 from apologies import Apologies
 from dadjokes import DadJokes
-from transcribe2gpt import ask_chatgpt
+from chatgpt_interface import ask_chatgpt
 from transcriber import record_until_silence, transcribe_audio
 from OPTIONS import TTS
 

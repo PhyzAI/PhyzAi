@@ -6,7 +6,8 @@ html {
 
 body {
     font-family: sans-serif;
-    min-width: 60em;
+    min-width: min(100vw, 60em);
+    max-width: 60em;
     background: #202020;
     padding: 16px;
     margin: 0;
@@ -36,6 +37,8 @@ code {
     border-radius: 4px;
     background: #000000b0;
     color: white;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 #output.-no-output {
     color: #bbbbbb;

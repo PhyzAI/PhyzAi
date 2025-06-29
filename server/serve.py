@@ -1,6 +1,7 @@
 import os
 import shlex
 import subprocess
+import sys
 import threading
 from collections import defaultdict
 from pathlib import Path
@@ -49,7 +50,7 @@ def main():
         nextid += 1
 
         def watcher():
-            for data in iter(proc.stdout.read, b''):
+            for data in iter(lambda: proc.stdout.read(1), b''):
                 proc_cache[this_id] += data
             proc.stdout.close()
 
@@ -67,6 +68,11 @@ def main():
     def gitcmd(command: str):
         broke_command = shlex.split(command)
         result = launch_proc(['git'] + broke_command)
+        return redirect(url_for('procmon', pid=result))
+
+    @app.route('/start_phyz')
+    def start_phyz():
+        result = launch_proc([sys.executable, "phyzai.py"])
         return redirect(url_for('procmon', pid=result))
 
     @app.route('/proclog/<int:proc_id>')

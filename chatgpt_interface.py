@@ -1,7 +1,4 @@
-import os
-from openai import OpenAI
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "sk-your-api-key")
+# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "sk-your-api-key")
 
 def ask_chatgpt(prompt, user_input):
     print(f"[DEBUG] Prompt: {prompt}\nUser input: {user_input}")
