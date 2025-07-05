@@ -238,11 +238,14 @@ async def askWithWait():
         print("cancelled")
 
 
+provider_flip_flop = True
+
+
 def controller():
     global firstListen
     global firstExit
     global firstInnapropriate
-    global stopped
+    global stopped, provider_flip_flop
 
     serialObj.timeout = None
     serialData = serialObj.read().decode('ascii')
@@ -259,9 +262,11 @@ def controller():
         speak(toSay)
         exit()
     elif serialData == '6':
-        rp('[bright_yellow]Switching providers.[/]')
-        asyncio.run(next_provider())
-        rp(f'[bright_green]New provider is [bold]{get_current_provider().name}[/][/]')
+        if provider_flip_flop:
+            rp('[bright_yellow]Switching providers.[/]')
+            asyncio.run(next_provider())
+            rp(f'[bright_green]New provider is [bold]{get_current_provider().name}[/][/]')
+        provider_flip_flop = not provider_flip_flop
 
 
 # This function plays the output we get back from the API.
