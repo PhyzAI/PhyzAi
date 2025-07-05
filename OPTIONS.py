@@ -54,3 +54,6 @@ except Exception as e:
 else:
     with open('prompt_cache.txt', 'w', encoding='utf-8') as f:
         f.write(prompt)
+
+with open('prompt_override.txt', 'r', encoding='utf-8') as f:
+    prompt_override = f.read()
