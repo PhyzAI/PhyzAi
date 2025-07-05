@@ -10,3 +10,4 @@ click
 pyttsx3
 Flask
 BeautifulSoup4
+pyserial
