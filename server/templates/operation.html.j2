@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='phyz.css') }}">
+    <script src="{{ url_for('static', filename='procmon.js') }}"></script>
+</head>
+<body>
+<noscript>JavaScript is required to use this page.</noscript>
+<a href="{{ url_for('homepage') }}">back to dashboard</a>
+<h2>Process monitor</h2>
+<div id="state" class="proc-state" data-state="loading">Loading...</div>
+<pre id="output">
+loading output...
+</pre>
+</body>
+</html>

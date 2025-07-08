@@ -11,3 +11,4 @@ temp_audio.wav
 en-us.wav
 rendered_*/
 baked_*.json
+prompt_cache.txt
