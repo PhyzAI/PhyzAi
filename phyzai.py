@@ -2,18 +2,33 @@ from io import BytesIO
 
 import sounddevice as sd
 import whisper
+import time
+import threading
+import queue
 from scipy.io import wavfile
 
 from apologies import Apologies
 from dadjokes import DadJokes
 from transcribe2gpt import ask_chatgpt
 from transcriber import record_until_silence, transcribe_audio
+from tts import speak
+from idlechecker import check_idle_and_prompt_chatgpt
 from OPTIONS import TTS, prompt
+
 
 speak = TTS.speak
 
 SYSTEM_PROMPT = prompt
 
+audio_queue = queue.Queue()
+last_interaction_time = time.time()
+
+
+
+def audio_recorder_loop():
+    while True:
+        audio = record_until_silence()
+        audio_queue.put(audio)
 
 def play_wav(raw: bytes):
     with BytesIO(raw) as filelike:
@@ -26,11 +41,33 @@ def main():
     model = whisper.load_model("base")  # Load Whisper model once
     dad_jokes = DadJokes()  # Load jokes once
     apologies = Apologies()  # Load apologies once
+    last_idle_response_time = 0  # separate from last user interaction
+    IDLE_PROMPT_INTERVAL = 15    # seconds between idle prompts
+    global last_interaction_time
 
     print("PHYZAI is listening... Say 'exit' to quit.")
 
+    recorder_thread = threading.Thread(target=audio_recorder_loop, daemon=True)
+    recorder_thread.start()
+
     while True:
-        audio_bytes = record_until_silence()
+        try:
+            # Try to get recorded audio
+            audio_bytes = audio_queue.get(timeout=1)  # wait max 1 sec
+        except queue.Empty:
+            current_time = time.time()
+            if current_time - last_interaction_time > 10 and current_time - last_idle_response_time > IDLE_PROMPT_INTERVAL:
+                if check_idle_and_prompt_chatgpt(last_interaction_time):
+                    last_idle_response_time = current_time
+            continue
+
+        
+        # except queue.Empty:
+        #     # No audio yet, check idle
+        #     check_idle_and_prompt_chatgpt(last_interaction_time)
+        #     continue
+
+        #audio_bytes = record_until_silence()
         transcription = transcribe_audio(model, audio_bytes)
         print(f"You said: {transcription}")
 
@@ -72,8 +109,13 @@ def main():
 
         # Otherwise normal GPT response
         response = ask_chatgpt(SYSTEM_PROMPT, transcription)
-        speak(response)
+        if (response):
+            last_interaction_time = time.time()
+        #speak(response)
         print(f"PHYZAI: {response}")
+
+        if check_idle_and_prompt_chatgpt(last_interaction_time):
+            last_interaction_time = time.time()
 
 
 if __name__ == "__main__":
