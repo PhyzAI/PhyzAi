@@ -66,16 +66,26 @@ def transcribe(audio_path):
     print("Transcript:", result['text'])
     return result['text']
 
+###############################
+#        TESTING METHOD
+###############################
 def ask_chatgpt(prompt, user_input):
-    messages = [
-        {"role": "system", "content": prompt},
-        {"role": "user", "content": user_input}
-    ]
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",  # or "gpt-4"
-        messages=messages
-    )
-    return response.choices[0].message.content.strip()
+    print(f"[DEBUG] Prompt: {prompt}\nUser input: {user_input}")
+    return "This is a dummy response until your API quota is available."
+########################################
+#   COMMENTED OUT FOR TESTING
+########################################
+
+# def ask_chatgpt(prompt, user_input):
+#     messages = [
+#         {"role": "system", "content": prompt},
+#         {"role": "user", "content": user_input}
+#     ]
+#     response = client.chat.completions.create(
+#         model="gpt-3.5-turbo",  # or "gpt-4"
+#         messages=messages
+#     )
+#     return response.choices[0].message.content.strip()
 
 if __name__ == "__main__":
     # Record with voice activation

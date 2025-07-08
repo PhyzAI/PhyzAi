@@ -1,8 +1,12 @@
 import sounddevice as sd
-import webrtcvad
+import webrtcvad    
 import collections
 import wave
 import numpy as np
+
+import sounddevice as sd
+import webrtcvad    
+import collections
 
 def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=0.8, vad_aggressiveness=2):
     """
@@ -13,49 +17,51 @@ def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=
         bytes: The raw audio bytes recorded.
     """
     vad = webrtcvad.Vad(vad_aggressiveness)
-
-    frame_size = int(sample_rate * frame_duration / 1000)  # samples per frame
+    frame_size = int(sample_rate * frame_duration / 1000)
     padding_frames = int(padding_duration * 1000 / frame_duration)
-
-    stream = sd.InputStream(samplerate=sample_rate, channels=1, dtype='int16')
-    stream.start()
-
     ring_buffer = collections.deque(maxlen=padding_frames)
     triggered = False
     voiced_frames = []
 
-    print("Listening for speech...")
+    stream = sd.InputStream(samplerate=sample_rate, channels=1, dtype='int16')
 
-    while True:
-        data, overflowed = stream.read(frame_size)
-        if overflowed:
-            print("Warning: buffer overflow")
-        audio_bytes = data.tobytes()
+    try:
+        stream.start()
+        print("Listening for speech...")
 
-        is_speech = vad.is_speech(audio_bytes, sample_rate)
+        while True:
+            try:
+                data, overflowed = stream.read(frame_size)
+                if overflowed:
+                    print("Warning: buffer overflow")
+                audio_bytes = data.tobytes()
+                is_speech = vad.is_speech(audio_bytes, sample_rate)
 
-        if not triggered:
-            ring_buffer.append((audio_bytes, is_speech))
-            num_voiced = len([f for f, speech in ring_buffer if speech])
-            if num_voiced > 0.6 * ring_buffer.maxlen:
-                triggered = True
-                print("Speech detected, recording...")
-                # Add all buffered frames to voiced_frames
-                for f, s in ring_buffer:
-                    voiced_frames.append(f)
-                ring_buffer.clear()
-        else:
-            voiced_frames.append(audio_bytes)
-            ring_buffer.append((audio_bytes, is_speech))
-            num_unvoiced = len([f for f, speech in ring_buffer if not speech])
-            if num_unvoiced > 0.95 * ring_buffer.maxlen:
-                print("Silence detected, stopping recording.")
+                if not triggered:
+                    ring_buffer.append((audio_bytes, is_speech))
+                    num_voiced = len([f for f, speech in ring_buffer if speech])
+                    if num_voiced > 0.6 * ring_buffer.maxlen:
+                        triggered = True
+                        print("Speech detected, recording...")
+                        for f, s in ring_buffer:
+                            voiced_frames.append(f)
+                        ring_buffer.clear()
+                else:
+                    voiced_frames.append(audio_bytes)
+                    ring_buffer.append((audio_bytes, is_speech))
+                    num_unvoiced = len([f for f, speech in ring_buffer if not speech])
+                    if num_unvoiced > 0.95 * ring_buffer.maxlen:
+                        print("Silence detected, stopping recording.")
+                        break
+            except Exception as e:
+                print(f"[Stream read error] {e}")
                 break
 
-    stream.stop()
+    finally:
+        stream.stop()
+        stream.close()
 
-    audio_data = b''.join(voiced_frames)
-    return audio_data
+    return b''.join(voiced_frames)
 
 def save_wav(filename, audio_data, sample_rate=16000):
     """
