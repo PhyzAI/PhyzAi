@@ -45,7 +45,7 @@ def fetch_prompt():
 
 try:
     prompt += '\n'
-    prompt += fetch_prompt()
+    prompt += 'Blarts are ' + fetch_prompt()
 except Exception as e:
     print(e)
     rp("[blue]Using prompt from cache[/]")
