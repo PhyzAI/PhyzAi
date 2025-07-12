@@ -7,13 +7,14 @@ import threading
 import queue
 from scipy.io import wavfile
 
+import remote_control
 from apologies import Apologies
 from dadjokes import DadJokes
 from transcribe2gpt import ask_chatgpt
 from transcriber import record_until_silence, transcribe_audio
-from tts import speak
 from idlechecker import check_idle_and_prompt_chatgpt
 from OPTIONS import TTS, prompt
+from rich import print as rp
 
 
 speak = TTS.speak
@@ -41,6 +42,7 @@ def main():
     model = whisper.load_model("base")  # Load Whisper model once
     dad_jokes = DadJokes()  # Load jokes once
     apologies = Apologies()  # Load apologies once
+    control_queue = remote_control.start_auto()
     last_idle_response_time = 0  # separate from last user interaction
     IDLE_PROMPT_INTERVAL = 15    # seconds between idle prompts
     global last_interaction_time
@@ -69,7 +71,7 @@ def main():
 
         #audio_bytes = record_until_silence()
         transcription = transcribe_audio(model, audio_bytes)
-        print(f"You said: {transcription}")
+        rp(f"[cyan][bold]You said:[/] {transcription}[/]")
 
         normalized = transcription.lower().strip().strip(".!?")
 
@@ -86,12 +88,12 @@ def main():
         #############################################################
         if dad_jokes.should_tell_another(normalized):
             joke = dad_jokes.get_random_joke()
-            print(f"PHYZAI: playing {joke.text}")
+            rp(f"PHYZAI: [bold bright_green]playing[/] [yellow]joke[/] {joke.text}")
             play_wav(joke.raw)
             continue
         elif dad_jokes.is_joke_request(normalized) and normalized not in ["tell another", "another"]:
             joke = dad_jokes.get_random_joke()
-            print(f"PHYZAI: {joke.text}")
+            rp(f"PHYZAI: [bold bright_green]playing[/] [yellow]joke[/] {joke.text}")
             play_wav(joke.raw)
             continue
         else:
@@ -103,7 +105,7 @@ def main():
         #############################################################
         apology_response = apologies.handle_apology_request(transcription)
         if apology_response:
-            print(f"PHYZAI: {apology_response.text}")
+            rp(f"PHYZAI: [bold bright_green]playing[/] [red]apology[/] {apology_response.text}")
             play_wav(apology_response.raw)
             continue
 
@@ -112,7 +114,7 @@ def main():
         if (response):
             last_interaction_time = time.time()
         #speak(response)
-        print(f"PHYZAI: {response}")
+        rp(f"PHYZAI: [bold bright_green]saying[/] [green]llm[/] {response}")
 
         if check_idle_and_prompt_chatgpt(last_interaction_time):
             last_interaction_time = time.time()
