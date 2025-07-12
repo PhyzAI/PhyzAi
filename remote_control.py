@@ -1,5 +1,6 @@
 # Handles input from remote control
 import time
+from pathlib import Path
 from queue import Queue
 from threading import Thread
 
@@ -11,16 +12,17 @@ class ArduinoInput:
     CMD_LOW = b'l'
     CMD_HI = b'h'
 
-    def __init__(self, port: str = 'COM4', baud: int = 9600, delay: float = 1.0):
+    def __init__(self, port: str = 'COM4', baud: int = 9600, delay: float = 1.0, **kwargs):
         self.port = serial.Serial(
             port=port,
             baudrate=baud,
-            timeout=0  # nonblocking mode
+            timeout=0,  # nonblocking mode
+            **kwargs
         )
         self.event_queue = Queue()
 
-        rp('[green][bold]Setting up serial port[/] {port} {baud}baud[/]', end='', flush=True)
-        self.port.open()
+        rp(f'[green][bold]Setting up serial port[/] {port} {baud}baud[/]', end='', flush=True)
+        # self.port.open()
         self.port.write(ArduinoInput.CMD_LOW)
         self.port.flush()
         rp('[green]...[/]', end='', flush=True)
@@ -38,8 +40,18 @@ class ArduinoInput:
             self.step()
 
 
-def start() -> Queue[bytes]:
-    port = ArduinoInput()
+def start_auto() -> Queue[bytes]:
+    port_name = 'COM4'
+    if Path('./port2').exists():
+        rp(f'[green]Using Linux test port (local port2)[/]')
+        port_name = './port2'
+    port = ArduinoInput(port=port_name)
     arduino_thread = Thread(target=port.loop, daemon=True)
     arduino_thread.start()
     return port.event_queue
+
+
+if __name__ == '__main__':
+    q = start_auto()
+    while 1:
+        print(q.get())
