@@ -10,7 +10,7 @@ from scipy.io import wavfile
 import remote_control
 from apologies import Apologies
 from dadjokes import DadJokes
-from transcribe2gpt import ask_chatgpt
+from actual_chatgpt import ask_chatgpt
 from transcriber import record_until_silence, transcribe_audio
 from idlechecker import check_idle_and_prompt_chatgpt
 from OPTIONS import TTS, prompt
