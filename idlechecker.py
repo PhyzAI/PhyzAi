@@ -1,6 +1,6 @@
 import time
 import random
-from transcribe2gpt import ask_chatgpt
+from actual_chatgpt import ask_chatgpt
 
 IDLE_THRESHOLD = random.randint(15, 45)
 

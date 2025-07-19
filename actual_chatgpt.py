@@ -6,16 +6,20 @@ from openai import OpenAI
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "sk-your-api-key")
 
 
-def ask_chatgpt(prompt, user_input):
-    messages = [
-        {"role": "system", "content": prompt},
-        {"role": "user", "content": user_input}
-    ]
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",  # or "gpt-4"
-        messages=messages
-    )
-    return response.choices[0].message.content.strip()
+def ask_chatgpt(system_prompt, user_prompt):
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.7
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"[ERROR] Failed to get response from ChatGPT: {e}")
+        return "This is a dummy response until your API quota is available."
 
 
 if __name__ == "__main__":

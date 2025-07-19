@@ -47,7 +47,7 @@ def main():
     dad_jokes = DadJokes()  # Load jokes once
     apologies = Apologies()  # Load apologies once
     thinking_lines = ThinkingLines()
-    control_queue = remove_control.start_auto()
+    control_queue = remote_control.start_auto()
     last_idle_response_time = 0  # separate from last user interaction
     IDLE_PROMPT_INTERVAL = 15    # seconds between idle prompts
     global last_interaction_time
