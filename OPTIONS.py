@@ -25,22 +25,21 @@ with open('prompt_base.txt', 'r', encoding='utf-8') as f:
 
 
 def fetch_prompt():
-    rp("[bold blue]Fetch and update prompt...[/]")
+    rp("[bold blue]Fetch and update prompt...[/]", end='', flush=True)
     resp = requests.get(url)
 
     # get and parse HTML
     soup = BeautifulSoup(resp.text, 'html.parser')
 
-    text = soup.get_text()
+    text = ""
+    for paragraph in soup.select('.wsite-body-section .paragraph'):
+        text += paragraph.get_text(separator=' ')
+        text += '\n'
 
-    clean = ' '.join(text.split())
-
-    matcher = re.search(
-        r'Meet the Blarts([\w\W]*?)Get ready to explore the wonders of science with Thunk, Spin, Click, and Clack!',
-        clean
-    )
-    rp("[bold blue]...done[/]")
-    return matcher.group(1)
+    cleaned = re.sub(r'[ \t]{2,}', ' ', text)
+    cleaned = re.sub(r'(?:\r?\n){2,}', '\n', cleaned)
+    rp("[bold green] ok[/]")
+    return cleaned
 
 
 try:
