@@ -5,15 +5,20 @@ import whisper
 import time
 import threading
 import queue
+import random
 from scipy.io import wavfile
 
 from apologies import Apologies
 from dadjokes import DadJokes
+from thinkingLines import ThinkingLines
 from transcribe2gpt import ask_chatgpt
 from transcriber import record_until_silence, transcribe_audio
-from tts import speak
+#from tts import speak
 from idlechecker import check_idle_and_prompt_chatgpt
-from OPTIONS import TTS, prompt
+from OPTIONS import prompt, TTS
+from mentorgreeter import check_for_new_mentors_and_greet
+
+
 
 
 speak = TTS.speak
@@ -41,6 +46,7 @@ def main():
     model = whisper.load_model("base")  # Load Whisper model once
     dad_jokes = DadJokes()  # Load jokes once
     apologies = Apologies()  # Load apologies once
+    thinking_lines = ThinkingLines()
     last_idle_response_time = 0  # separate from last user interaction
     IDLE_PROMPT_INTERVAL = 15    # seconds between idle prompts
     global last_interaction_time
@@ -56,10 +62,20 @@ def main():
             audio_bytes = audio_queue.get(timeout=1)  # wait max 1 sec
         except queue.Empty:
             current_time = time.time()
-            if current_time - last_interaction_time > 10 and current_time - last_idle_response_time > IDLE_PROMPT_INTERVAL:
-                if check_idle_and_prompt_chatgpt(last_interaction_time):
-                    last_idle_response_time = current_time
+
+            #check to see if there are any new mentors in screen
+            if audio_queue.empty():  # or similar condition to ensure Phyz is not busy
+                check_for_new_mentors_and_greet(speak)
+
+
+            response, last_idle_response_time = check_idle_and_prompt_chatgpt(
+                last_interaction_time, last_idle_response_time
+            )
+            if response:
+                print(f"PHYZAI (idle): {response}")
+                speak(response)
             continue
+
 
         
         # except queue.Empty:
@@ -107,6 +123,14 @@ def main():
             play_wav(apology_response.raw)
             continue
 
+        # Say thinking line while PHYZ figures out what its saying and renders it
+        if random.random() < 0.5:
+            thinking = thinking_lines.get_random_think_line()
+            if thinking:
+                print(f"PHYZAI (thinking): {thinking.text}")
+                play_wav(thinking.raw)
+
+
         # Otherwise normal GPT response
         response = ask_chatgpt(SYSTEM_PROMPT, transcription)
         if (response):
@@ -114,7 +138,7 @@ def main():
         #speak(response)
         print(f"PHYZAI: {response}")
 
-        if check_idle_and_prompt_chatgpt(last_interaction_time):
+        if check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time):
             last_interaction_time = time.time()
 
 
