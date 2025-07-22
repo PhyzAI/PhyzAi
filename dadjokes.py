@@ -9,12 +9,23 @@ class DadJokes:
         self.joke_file = bakery.deserialize_bakery(Path(bakery_file))
         self.jokes = list(self.joke_file.items.values())
         self.just_told_joke = False
+        self.file_path = "dadJokes.txt"
 
-    def get_random_joke(self) -> bakery.BakeryRecord | None:
-        if not self.jokes:
-            return None
-        self.just_told_joke = True
-        return random.choice(self.jokes)
+    # def get_random_joke(self) -> bakery.BakeryRecord | None:
+    #     if not self.jokes:
+    #         return None
+    #     self.just_told_joke = True
+    #     return random.choice(self.jokes)
+
+    def get_random_joke(self):
+        try:
+            with open(self.file_path, "r", encoding="utf-8") as file:
+                jokes = [line.strip() for line in file if line.strip()]
+            return random.choice(jokes) if jokes else "No jokes found!"
+        except FileNotFoundError:
+            return "Joke file not found!"
+        except Exception as e:
+            return f"Error reading jokes: {e}"
 
     def reset_joke_flag(self):
         self.just_told_joke = False

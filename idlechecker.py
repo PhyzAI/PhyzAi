@@ -2,26 +2,28 @@ import time
 import random
 from actual_chatgpt import ask_chatgpt
 
-IDLE_THRESHOLD = random.randint(15, 45)
+
+IDLE_THRESHOLD = random.randint(60, 120)
 
 BEHAVIOR_MODES = {
-    "joke": 0.4,
+    "joke": 0.2,
     "quiz": 0.1,
     "moderator_poke": 0.3,
-    "curious_question": 0.2
+    "curious_question": 0.4
     #Science News
 }
 
 BEHAVIOR_PROMPTS = {
-    "joke": "Tell a short, funny science-related joke to get a kid's attention. Keep it quick and silly.",
-    "quiz": "Ask a fun, easy STEM trivia question to engage nearby kids. Only ask one question.",
-    "moderator_poke": "Say something playful to poke fun at one of the moderators. Be very light-hearted and funny.",
-    "curious_question": "Ask the room a curious STEM-related question to spark conversation. Keep it friendly and thought-provoking."
+    "joke": "You are addressing a small crowd. What you say needs to break the ice and get people to engage with you. Say something that breaks the silence that leads into telling a short, funny sometimes science-related joke to get a kid's attention. Keep it quick and silly. try not to end in an odd question.",
+    "quiz": "You are addressing a small crowd. What you say needs to break the ice and get people to engage with you. Ask a fun, easy STEM trivia question to engage nearby kids. Only ask one question.",
+    "moderator_poke": "You are addressing a small crowd. What you say needs to break the ice and get people to engage with you. Say something playful to poke fun at one of the moderators. Be very light-hearted and funny.",
+    "curious_question": "You are addressing a small crowd. What you say needs to break the ice and get people to engage with you. Ask the room a curious STEM-related question to spark conversation. Keep it friendly and thought-provoking."
 }
 
 SYSTEM_PROMPT = (
     "You are PhyzAI, an educational robot. You're witty, engaging, and love talking with kids and moderators. "
-    "Make your responses fun, smart, and short (1-2 sentences max)."
+    "Make your responses fun, smart, and short. try to sound as human like as possible."
+    "Make sure to not include any emoji's"
 )
 
 #reads out the possibilities of phyz saying different idle actions

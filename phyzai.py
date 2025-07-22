@@ -103,13 +103,13 @@ def main():
         #############################################################
         if dad_jokes.should_tell_another(normalized):
             joke = dad_jokes.get_random_joke()
-            rp(f"PHYZAI: [bold bright_green]playing[/] [yellow]joke[/] {joke.text}")
-            play_wav(joke.raw)
+            rp(f"PHYZAI: [bold bright_green]playing[/] [yellow]joke[/] {joke}")
+            speak(joke)
             continue
         elif dad_jokes.is_joke_request(normalized) and normalized not in ["tell another", "another"]:
             joke = dad_jokes.get_random_joke()
-            rp(f"PHYZAI: [bold bright_green]playing[/] [yellow]joke[/] {joke.text}")
-            play_wav(joke.raw)
+            rp(f"PHYZAI: [bold bright_green]playing[/] [yellow]joke[/] {joke}")
+            speak(joke)
             continue
         else:
             # Reset joke flag only if input is NOT joke related

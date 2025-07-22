@@ -1,14 +1,17 @@
 import os
-
+from dotenv import load_dotenv
 from openai import OpenAI
+
+load_dotenv()
 
 # Load OpenAI client (replace with your actual key or use .env file)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "sk-your-api-key")
 
 
+
 def ask_chatgpt(system_prompt, user_prompt):
     try:
-        response = openai.chat.completions.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": system_prompt},
