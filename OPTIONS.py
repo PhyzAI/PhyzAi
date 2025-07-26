@@ -43,16 +43,31 @@ def fetch_prompt():
 
 
 try:
-    prompt += '\n'
-    prompt += fetch_prompt()
+    online = fetch_prompt()
 except Exception as e:
     print(e)
     rp("[blue]Using prompt from cache[/]")
+    online = None
+
+if online is not None:
+    prompt += '\n'
+    prompt += online
+else:
     with open('prompt_cache.txt', 'r', encoding='utf-8') as f:
         prompt = f.read()
-else:
-    with open('prompt_cache.txt', 'w', encoding='utf-8') as f:
-        f.write(prompt)
+
+with open('prompt_cache.txt', 'w', encoding='utf-8') as f:
+    f.write(prompt)
 
 with open('prompt_override.txt', 'r', encoding='utf-8') as f:
     prompt_override = f.read()
+
+if online is not None:
+    prompt_override += '\n'
+    prompt_override += online
+else:
+    with open('prompt_override_cache.txt', 'r', encoding='utf-8') as f:
+        prompt = f.read()
+
+with open('prompt_override_cache.txt', 'w', encoding='utf-8') as f:
+    f.write(prompt_override)

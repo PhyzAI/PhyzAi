@@ -1,4 +1,6 @@
 import os
+import sys
+
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -27,14 +29,21 @@ def ask_chatgpt(system_prompt, user_prompt):
 
 if __name__ == "__main__":
     # Testing chat client
-    from OPTIONS import prompt
+    from OPTIONS import prompt, prompt_override
     from rich.prompt import Prompt
     from rich import print as rp
+
+    used_prompt = prompt
+
+    if len(sys.argv) > 1 and sys.argv[1] == "override":
+        rp("[yellow]override prompt[/]")
+        used_prompt = prompt_override
+
     try:
         while 1:
             query = Prompt.ask("[green]user[/] ")
             rp(f"[blue]agent[/]: ", end='', flush=True)
-            resp = ask_chatgpt(prompt, query)
+            resp = ask_chatgpt(used_prompt, query)
             rp(f"{resp}")
     except KeyboardInterrupt:
         rp(f"[red] quitting[/]")
