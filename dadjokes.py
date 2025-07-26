@@ -9,7 +9,7 @@ class DadJokes:
         self.joke_file = bakery.deserialize_bakery(Path(bakery_file))
         self.jokes = list(self.joke_file.items.values())
         self.just_told_joke = False
-        self.file_path = "dadJokes.txt"
+        self.file_path = "data/dadJokes.txt"
 
     # def get_random_joke(self) -> bakery.BakeryRecord | None:
     #     if not self.jokes:

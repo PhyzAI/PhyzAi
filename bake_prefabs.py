@@ -81,6 +81,7 @@ def process_all(source_file: Path, bake_file: Path | None = None):
 
 if __name__ == '__main__':
     rp(f"[bright_magenta]Current source hash is [bold]{HASH[0:16]}[/][/]")
-    process_all(Path("apologies.txt"))
-    process_all(Path("dadJokes.txt"))
-    process_all(Path("thinking_lines.txt"))
+    process_all(Path("data/apologies.txt"))
+    process_all(Path("data/dadJokes.txt"))
+    process_all(Path("data/thinking_lines.txt"))
+    process_all(Path("data/inappropriate.txt"))
