@@ -133,9 +133,9 @@ class Person:
 
 
 
-##################
-# Functions
-##################
+###################
+#    Functions    #
+###################
 
 def draw_face_boxes(frame, boxes, probs):
         """ Draw a box for each face detected """
@@ -236,9 +236,9 @@ def get_screen_position(person_loc = [0,0], move_scale = 1.0):
     return(x_box_mid,y_box_mid)
 
 
-#################
-# Motor Control 
-#################
+##################
+#  Motor Control #
+##################
 
 def set_head_to_nominal():
     servo.setTarget(head_x_channel, head_x_range[1])
@@ -444,9 +444,9 @@ def detect_faces(frame, max_faces = 5, PROB_THRESH = 0.90):
 
 
 
-############
-### MAIN ###
-############
+################
+###   MAIN   ###
+################
 
 
 print("*** Starting ***")
@@ -504,8 +504,9 @@ random_people_list = choose_people_locations(num_people, enable_face_camera)
 people_list = random_people_list.copy()  # Initially, all people are random
 new_people_list = []
 
-
-### Main Loop ###
+###################
+###  Main Loop  ###
+###################
 
 while True:
 
@@ -589,9 +590,9 @@ while True:
         this_x, this_y = get_screen_position((person.x_pos, person.y_pos))
         draw_person_loc(frame, this_x, this_y, person.name)
 
-    ###########################################
-    #       Decide who/what to look at        #
-    ###########################################
+    ############################################
+    #        Decide who/what to look at        #
+    ############################################
 
     #checks if speaking
     is_speaking = open("transcribe_status.txt", "r", encoding="utf-8").read().strip() == "recording"
