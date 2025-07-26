@@ -43,6 +43,9 @@ def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=
                     if num_voiced > 0.6 * ring_buffer.maxlen:
                         triggered = True
                         print("Speech detected, recording...")
+                        #write into file to tell phyz to look at mic
+                        with open("transcribe_status.txt", "w", encoding="utf-8") as f:
+                            f.write("recording")
                         for f, s in ring_buffer:
                             voiced_frames.append(f)
                         ring_buffer.clear()
@@ -52,6 +55,8 @@ def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=
                     num_unvoiced = len([f for f, speech in ring_buffer if not speech])
                     if num_unvoiced > 0.95 * ring_buffer.maxlen:
                         print("Silence detected, stopping recording.")
+                        #write into file to tell phyz to look away from mic
+                        open("transcribe_status.txt", "w", encoding="utf-8").close()
                         break
             except Exception as e:
                 print(f"[Stream read error] {e}")
