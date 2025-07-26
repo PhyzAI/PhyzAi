@@ -16,12 +16,13 @@ from actual_chatgpt import ask_chatgpt
 from transcriber import record_until_silence, transcribe_audio
 
 from idlechecker import check_idle_and_prompt_chatgpt
-from OPTIONS import TTS, prompt
+from OPTIONS import prompt#, TTS
+from tts import TTS
 from mentorgreeter import check_for_new_mentors_and_greet
 from rich import print as rp
 
 
-speak = TTS.speak
+speak = TTS().speak
 
 SYSTEM_PROMPT = prompt
 
@@ -136,8 +137,8 @@ def main():
         response = ask_chatgpt(SYSTEM_PROMPT, transcription)
         if (response):
             last_interaction_time = time.time()
-        #speak(response)
         rp(f"PHYZAI: [bold bright_green]saying[/] [green]llm[/] {response}")
+        speak(response)
 
         if check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time):
             last_interaction_time = time.time()
