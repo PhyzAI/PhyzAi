@@ -5,7 +5,7 @@ import bakery
 
 
 class ThinkingLines:
-    def __init__(self, bakery_file="baked_thinkingLines.json"):
+    def __init__(self, bakery_file="data/baked_thinkingLines.json"):
         self.think_file = bakery.deserialize_bakery(Path(bakery_file))
         self.think_lines = list(self.think_file.items.values())
 

@@ -5,7 +5,7 @@ import bakery
 
 
 class Apologies:
-    def __init__(self, bakery_file="baked_apologies.json"):
+    def __init__(self, bakery_file="data/baked_apologies.json"):
         self.apologies_file = bakery.deserialize_bakery(Path(bakery_file))
         self.apologies = list(self.apologies_file.items.values())
 
