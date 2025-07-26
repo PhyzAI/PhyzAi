@@ -5,7 +5,7 @@ import random
 import time
 
 MENTOR_FILE_PATH = "seen_mentors.txt"
-GREETINGS_FILE_PATH = "mentor_greetings.txt"
+GREETINGS_FILE_PATH = "data/mentor_greetings.txt"
 
 # Load greetings once
 with open(GREETINGS_FILE_PATH, "r", encoding="utf-8") as f:
