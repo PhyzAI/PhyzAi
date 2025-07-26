@@ -1,5 +1,7 @@
 import time
 import random
+
+import OPTIONS
 from actual_chatgpt import ask_chatgpt
 
 
@@ -20,11 +22,7 @@ BEHAVIOR_PROMPTS = {
     "curious_question": "You are addressing a small crowd. What you say needs to break the ice and get people to engage with you. Ask the room a curious STEM-related question to spark conversation. Keep it friendly and thought-provoking."
 }
 
-SYSTEM_PROMPT = (
-    "You are PhyzAI, an educational robot. You're witty, engaging, and love talking with kids and moderators. "
-    "Make your responses fun, smart, and short. try to sound as human like as possible."
-    "Make sure to not include any emoji's"
-)
+SYSTEM_PROMPT = OPTIONS.prompt_override
 
 #reads out the possibilities of phyz saying different idle actions
 def weighted_choice(weight_dict):
