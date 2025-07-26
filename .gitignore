@@ -12,6 +12,7 @@ en-us.wav
 rendered_*/
 baked_*.json
 prompt_cache.txt
+.env
 
 # Serial testing ports (Linux)
 /port1
