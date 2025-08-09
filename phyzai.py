@@ -26,11 +26,25 @@ from rich import print as rp
 speak = TTS.speak
 speak = TTS().speak
 
-SYSTEM_PROMPT = prompt
-
 audio_queue = queue.Queue()
 last_interaction_time = time.time()
 
+#Create space to store memory of responses
+conversation_history = []
+
+#System Prompt Definition
+SYSTEM_PROMPT = prompt
+
+def augment_prompt_with_mentors(base_prompt, mentor_file="seen_mentors.txt"):
+    try:
+        with open(mentor_file, "r", encoding="utf-8") as f:
+            mentors = [line.strip() for line in f if line.strip()]
+        if mentors:
+            mentor_line = "You can also address any of the following names if you have a question: " + ", ".join(mentors) + "."
+            return f"{base_prompt}\n{mentor_line}"
+    except FileNotFoundError:
+        pass
+    return base_prompt
 
 
 def audio_recorder_loop():
@@ -134,14 +148,26 @@ def main():
                 print(f"PHYZAI (thinking): {thinking.text}")
                 play_wav(thinking.raw)
 
-
+ 
         # Otherwise normal GPT response
-        response = ask_chatgpt(SYSTEM_PROMPT, transcription)
-        if (response):
-            last_interaction_time = time.time()
-        #speak(response)
-        rp(f"PHYZAI: [bold bright_green]saying[/] [green]llm[/] {response}")
-        speak(response)
+        trigger_words = [
+            "phyz", "fizzy", "fizz", "phizz", "fizzay", "phiz", "phys", "fisy",
+            "fizzey", "fizzzy", "phisy", "fiz", "fizzee", "phizzy"
+        ]
+
+        normalized = transcription.lower()
+
+        #Make prompt include mentors to address if Phyz is confused
+        enhanced_prompt = augment_prompt_with_mentors(SYSTEM_PROMPT)
+
+        #Respond with Chat if Phyz is mentioned
+        if any(word in normalized for word in trigger_words):
+            response = ask_chatgpt(enhanced_prompt, transcription)
+            if response:
+                last_interaction_time = time.time()
+                rp(f"PHYZAI: [bold bright_green]saying[/] [green]llm[/] {response}")
+                speak(response)
+
 
         if check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time):
             last_interaction_time = time.time()

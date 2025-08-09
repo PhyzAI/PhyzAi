@@ -1,8 +1,12 @@
 import os
 import sys
+import time
 
 from dotenv import load_dotenv
 from openai import OpenAI
+conversation_history = []  # Global or persistent in-session
+MEMORY_DURATION = 120       # Amount of time to remember
+
 
 load_dotenv()
 
@@ -12,19 +16,53 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "sk-your-api-key")
 
 
 def ask_chatgpt(system_prompt, user_prompt):
+    current_time = time.time()
+
+    # 1. Filter for only recent messages
+    valid_messages = [
+        {"role": entry["role"], "content": entry["content"]}
+        for entry in conversation_history
+        if current_time - entry["timestamp"] <= MEMORY_DURATION
+    ]
+
+    # 2. Prune old entries from history
+    conversation_history[:] = [
+        entry for entry in conversation_history
+        if current_time - entry["timestamp"] <= MEMORY_DURATION
+    ]
+
+    # 3. Add system and current user prompt
+    messages = [{"role": "system", "content": system_prompt}] + valid_messages
+    messages.append({"role": "user", "content": user_prompt})
+
+    # 4. Store this user input in memory
+    conversation_history.append({
+        "role": "user",
+        "content": user_prompt,
+        "timestamp": current_time
+    })
+
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
+            model="gpt-4o",
+            messages=messages,
             temperature=0.7
         )
-        return response.choices[0].message.content.strip()
+        reply = response.choices[0].message.content.strip()
+
+        # 5. Store assistant response in memory
+        conversation_history.append({
+            "role": "assistant",
+            "content": reply,
+            "timestamp": current_time
+        })
+
+        return reply
+
     except Exception as e:
         print(f"[ERROR] Failed to get response from ChatGPT: {e}")
         return "This is a dummy response until your API quota is available."
+
 
 
 if __name__ == "__main__":
