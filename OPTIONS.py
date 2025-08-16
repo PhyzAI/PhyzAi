@@ -38,6 +38,7 @@ def fetch_prompt():
 
     cleaned = re.sub(r'[ \t]{2,}', ' ', text)
     cleaned = re.sub(r'(?:\r?\n){2,}', '\n', cleaned)
+    cleaned = re.sub(r'(start_here|end_here)\r?\n?', '\n', cleaned)
     rp("[bold green] ok[/]")
     return cleaned
 
