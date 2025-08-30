@@ -171,7 +171,7 @@ def main():
                 speak(response)
 
 
-        if check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time):
+        if (check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time))[0]:
             last_interaction_time = time.time()
 
 
