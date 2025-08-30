@@ -70,7 +70,7 @@ def check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time
         if response:
             print(f"PHYZAI (idle-{behavior}): {response}")
             last_idle_response_time = current_time
-            IDLE_THRESHOLD = random.randint(15, 45)
+            IDLE_THRESHOLD = random.randint(60, 120)
             return response, last_idle_response_time
 
     return None, last_idle_response_time

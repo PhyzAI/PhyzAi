@@ -97,10 +97,10 @@ def main():
 
 
 
-        # except queue.Empty:
-        #     # No audio yet, check idle
-        #     check_idle_and_prompt_chatgpt(last_interaction_time)
-        #     continue
+        except queue.Empty:
+            # No audio yet, check idle
+            check_idle_and_prompt_chatgpt(last_interaction_time)
+            continue
 
         #audio_bytes = record_until_silence()
         transcription = transcribe_audio(model, audio_bytes)

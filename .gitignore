@@ -18,3 +18,9 @@ prompt_override_cache.txt
 # Serial testing ports (Linux)
 /port1
 /port2
+clarificationHandler.py
+trainer.py
+coqui_training/config.json
+coqui_training/train.txt
+coqui_training/val.txt
+coqui_training/dataset/wavs/audio1.mp3
