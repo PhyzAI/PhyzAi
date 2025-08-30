@@ -56,7 +56,7 @@ def check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time
     time_since_last_interact = current_time - last_interaction_time
     time_since_last_idle = current_time - last_idle_response_time
 
-    rp(f"[bright_black]idle stats: [blue]interact {time_since_last_interact:.1f}s[/] [purple]idle {time_since_last_idle:.1f}s[/] [green]target {IDLE_THRESHOLD}s[/]")
+    # rp(f"[bright_black]idle stats: [blue]interact {time_since_last_interact:.1f}s[/] [purple]idle {time_since_last_idle:.1f}s[/] [green]target {IDLE_THRESHOLD}s[/]")
 
     if (time_since_last_interact > IDLE_THRESHOLD and
         time_since_last_idle > IDLE_THRESHOLD):
