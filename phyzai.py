@@ -153,7 +153,8 @@ def main():
         # Otherwise normal GPT response
         trigger_words = [
             "phyz", "fizzy", "fizz", "phizz", "fizzay", "phiz", "phys", "fisy",
-            "fizzey", "fizzzy", "phisy", "fiz", "fizzee", "phizzy"
+            "fizzey", "fizzzy", "phisy", "fiz", "fizzee", "phizzy",
+            "thiz",
         ]
 
         normalized = transcription.lower()
