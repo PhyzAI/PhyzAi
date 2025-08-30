@@ -68,7 +68,7 @@ if online is not None:
     prompt_override += online
 else:
     with open('prompt_override_cache.txt', 'r', encoding='utf-8') as f:
-        prompt = f.read()
+        prompt_override = f.read()
 
 with open('prompt_override_cache.txt', 'w', encoding='utf-8') as f:
     f.write(prompt_override)
