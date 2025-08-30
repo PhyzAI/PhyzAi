@@ -16,10 +16,10 @@ def read_website_text(url):
     # Clean up the text (remove extra whitespace)
     clean_text = ' '.join(text.split())
 
-    # Remove all the text after the string "Meet the Blarts"
-    clean_text = clean_text.split("Meet the Blarts", 1)[1]
+    # Remove all the text after the string "The Blarts"
+    clean_text = clean_text.split("start_here", 1)[1]
     
-    clean_text = clean_text.split("Get ready to explore the wonders of science with Thunk, Spin, Click, and Clack!", 1)[0]
+    clean_text = clean_text.split("end_here", 1)[0]
 
     return clean_text
 
@@ -96,8 +96,8 @@ website_text = read_website_text(url)
 # text_to_speech(website_text, voice_index=0, rate=-5)  # Use first voice with slower speed
 
 # write prompts.py
-file1 = "mainprompt.txt"
-file2 = "overrideprompt.txt"
+file1 = "./data/mainprompt.txt"
+file2 = "./data/overrideprompt.txt"
 output = "prompts.py"
 
 # Read first file
@@ -109,7 +109,7 @@ with open(file2, 'r', encoding='utf-8') as file2:
     content2 = file2.read()
         
 # Combine the contents
-combined_content = content1 + '                "Blarts are ' + website_text[1:] + '"' + "\n" + content2
+combined_content = content1 + '                "' + website_text[1:] + '"' + "\n" + content2
         
 # Write to output file
 with open(output, 'w', encoding='utf-8') as output_file:
