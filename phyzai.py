@@ -17,8 +17,8 @@ from transcriber import record_until_silence, transcribe_audio
 
 from idlechecker import check_idle_and_prompt_chatgpt
 from OPTIONS import TTS, prompt
-from OPTIONS import prompt#, TTS
-from tts import TTS
+from OPTIONS import prompt, TTS
+#from tts import TTS
 from ttsx import speak as ttsx_speak
 from mentorgreeter import check_for_new_mentors_and_greet
 from rich import print as rp
