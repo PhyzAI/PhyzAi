@@ -40,7 +40,7 @@ def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=
                 if not triggered:
                     ring_buffer.append((audio_bytes, is_speech))
                     num_voiced = len([f for f, speech in ring_buffer if speech])
-                    if num_voiced > 0.6 * ring_buffer.maxlen:
+                    if num_voiced > 0.9 * ring_buffer.maxlen:
                         triggered = True
                         print("Speech detected, recording...")
                         #write into file to tell phyz to look at mic
