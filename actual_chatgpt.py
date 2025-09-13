@@ -61,7 +61,7 @@ def ask_chatgpt(system_prompt, user_prompt):
 
     except Exception as e:
         print(f"[ERROR] Failed to get response from ChatGPT: {e}")
-        return "This is a dummy response until your API quota is available."
+        return "This is a dummy response until your API quota is available." #TODO: Respond with an apology prefab
 
 
 

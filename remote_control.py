@@ -1,3 +1,5 @@
+#TODO:Implement this in main via the TODO sections
+
 # Handles input from remote control
 import time
 from pathlib import Path

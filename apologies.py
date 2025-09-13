@@ -3,6 +3,8 @@ from pathlib import Path
 
 import bakery
 
+#TODO: Add apologies as dummy response when there is no internet connection
+
 
 class Apologies:
     def __init__(self, bakery_file="data/baked_apologies.json"):
