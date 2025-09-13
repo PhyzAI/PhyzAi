@@ -21,6 +21,10 @@ def write(text: str, path: Path | str):
 
 
 def speak(text: str):
+    with open("speak_status.txt", "w", encoding="utf-8") as f:
+        f.write("speaking")
     engine.say(text)
     engine.runAndWait()
+    open("speak_status.txt", "w", encoding="utf-8").close()
+
     # engine.stop()

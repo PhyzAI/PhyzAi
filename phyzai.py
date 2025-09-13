@@ -49,15 +49,18 @@ def augment_prompt_with_mentors(base_prompt, mentor_file="seen_mentors.txt"):
 
 
 def audio_recorder_loop():
-    while True:
-        audio = record_until_silence()
-        audio_queue.put(audio)
+    with open("speak_status.txt", "r") as f:
+        status = f.read().strip().lower()
+        while True and status != "speaking":
+            audio = record_until_silence()
+            audio_queue.put(audio)
 
 def play_wav(raw: bytes):
     with BytesIO(raw) as filelike:
         samplerate, data = wavfile.read(filelike)
     sd.play(data, samplerate)
     sd.wait()
+
 
 
 def main():
@@ -72,7 +75,15 @@ def main():
 
     print("PHYZAI is listening... Say 'exit' to quit.")
 
-    recorder_thread = threading.Thread(target=audio_recorder_loop, daemon=True)
+
+    #############################
+    ###     Recorder Loop     ###
+    #############################
+    #TODO: Make button activated option
+    #would add a if statement at the front like:
+    #if button flag true then
+
+    recorder_thread = threading.Thread(target=audio_recorder_loop, daemon=True)   # This is the thread that runs record until silence
     recorder_thread.start()
 
     while True:
@@ -96,14 +107,17 @@ def main():
             continue
 
 
+        ########################################################
+        #####                Transcription                ######
+        ########################################################
 
-        # except queue.Empty:
-        #     # No audio yet, check idle
-        #     check_idle_and_prompt_chatgpt(last_interaction_time)
-        #     continue
+        #TODO: make button activated option (would look like below comments)
+        #if button activated true
+        #   if button pressed set pressed flag true
+        #       if button not pressed and pressed flag is true then call record until silence       
+        #(This allows us to not accidentally double call a method if the button is being held down)
 
-        #audio_bytes = record_until_silence()
-        transcription = transcribe_audio(model, audio_bytes)
+        transcription = transcribe_audio(model, audio_bytes)  
         rp(f"[cyan][bold]You said:[/] {transcription}[/]")
 
         normalized = transcription.lower().strip().strip(".!?")
@@ -142,7 +156,7 @@ def main():
             play_wav(apology_response.raw)
             continue
 
-        # Say thinking line while PHYZ figures out what its saying and renders it
+        # Say thinking line while PHYZ figures out what its saying and renders it (These have not been prefabed yet)
         if random.random() < 0.5:
             thinking = thinking_lines.get_random_think_line()
             if thinking:
