@@ -8,7 +8,8 @@ import sounddevice as sd
 import webrtcvad    
 import collections
 
-def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=0.8, vad_aggressiveness=2):
+#Bahadir: original vad_aggressiveness was 2
+def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=0.8, vad_aggressiveness=3):
     """
     Records audio from the microphone, starts recording when speech is detected,
     and stops recording shortly after speech ends.
@@ -40,7 +41,8 @@ def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=
                 if not triggered:
                     ring_buffer.append((audio_bytes, is_speech))
                     num_voiced = len([f for f, speech in ring_buffer if speech])
-                    if num_voiced > 0.9 * ring_buffer.maxlen:
+                    #Bahadir: original threshold was 0.9
+                    if num_voiced > 0.99 * ring_buffer.maxlen:
                         triggered = True
                         print("Speech detected, recording...")
                         #write into file to tell phyz to look at mic
@@ -53,7 +55,8 @@ def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=
                     voiced_frames.append(audio_bytes)
                     ring_buffer.append((audio_bytes, is_speech))
                     num_unvoiced = len([f for f, speech in ring_buffer if not speech])
-                    if num_unvoiced > 0.95 * ring_buffer.maxlen:
+                    #Bahadir: original threshold was 0.95
+                    if num_unvoiced > 0.99 * ring_buffer.maxlen:
                         print("Silence detected, stopping recording.")
                         #write into file to tell phyz to look away from mic
                         open("transcribe_status.txt", "w", encoding="utf-8").close()

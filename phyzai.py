@@ -54,6 +54,19 @@ def audio_recorder_loop():
         while True and status != "speaking":
             audio = record_until_silence()
             audio_queue.put(audio)
+            # Bahadir addition
+            f.seek(0)
+            status = f.read().strip().lower()
+            while True and status == "speaking":
+                time.sleep(0.1)
+                f.seek(0)
+                status = f.read().strip().lower()
+            print("Bahadir Debug listening loop")
+
+
+            
+
+
 
 def play_wav(raw: bytes):
     with BytesIO(raw) as filelike:
@@ -90,6 +103,8 @@ def main():
         try:
             # Try to get recorded audio
             audio_bytes = audio_queue.get(timeout=1)  # wait max 1 sec
+            print("Bahadir Debug speaking loop")
+
         except queue.Empty:
             current_time = time.time()
 
@@ -178,6 +193,10 @@ def main():
 
         #Respond with Chat if Phyz is mentioned
         if any(word in normalized for word in trigger_words):
+            # bahadir addition - two lines below
+            with open("speak_status.txt", "w", encoding="utf-8") as f:
+                f.write("speaking")
+                #print("Bahadir Debug heard Phyz")
             response = ask_chatgpt(enhanced_prompt, transcription)
             if response:
                 last_interaction_time = time.time()

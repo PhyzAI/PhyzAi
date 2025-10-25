@@ -21,10 +21,17 @@ def write(text: str, path: Path | str):
 
 
 def speak(text: str):
-    with open("speak_status.txt", "w", encoding="utf-8") as f:
-        f.write("speaking")
+    # bahadir addition three lines below
+    with open("speak_status.txt", "r") as f:
+        status = f.read().strip().lower()
+        if status != "speaking":
+            with open("speak_status.txt", "w", encoding="utf-8") as f:
+                f.write("speaking")
+                #print("Bahadir Debug actually speaking")
+
     engine.say(text)
     engine.runAndWait()
     open("speak_status.txt", "w", encoding="utf-8").close()
+    #print("Bahadir Debug actually speaking")
 
     # engine.stop()
