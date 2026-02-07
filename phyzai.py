@@ -145,6 +145,12 @@ def main():
             speak("goodbye")
             break
 
+        # New: flush queue via voice command
+        if normalized in ("flush", "clear queue", "clear audio queue"):
+            flush_audio_queue()
+            rp("[yellow]Audio queue flushed[/]")
+            continue
+
         #############################################################
         # Check for joke requests
         #############################################################
@@ -193,7 +199,8 @@ def main():
 
         #Respond with Chat if Phyz is mentioned
         if any(word in normalized for word in trigger_words):
-            # bahadir addition - two lines below
+            # bahadir addition - three lines below
+            flush_audio_queue()
             with open("speak_status.txt", "w", encoding="utf-8") as f:
                 f.write("speaking")
                 #print("Bahadir Debug heard Phyz")
@@ -206,6 +213,19 @@ def main():
 
         if (check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time))[0]:
             last_interaction_time = time.time()
+
+
+def flush_audio_queue(q: queue.Queue = audio_queue):
+    """
+    Drain all currently queued audio frames without blocking.
+    Note: this is not atomic with producers — new items may be added
+    while draining. For atomic swap, use a Lock and replace the queue.
+    """
+    try:
+        while True:
+            q.get_nowait()
+    except queue.Empty:
+        return
 
 
 if __name__ == "__main__":
