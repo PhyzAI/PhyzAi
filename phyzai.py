@@ -7,6 +7,7 @@ import threading
 import queue
 import random
 from scipy.io import wavfile
+import winsound # make beeping noises
 
 import remote_control
 from apologies import Apologies
@@ -43,7 +44,7 @@ except serial.SerialException as e:
 
 # For the continuous listening mode, we need True for listeningmode. For button activated mode
 # switch to False.
-listeningmode = False
+listeningmode = True
 
 
 speak = ttsx_speak
@@ -85,6 +86,11 @@ def audio_recorder_loop():
                 #print(currentSerial)
             if (listeningmode == True) or (currentSerial == '4'):
 
+                if currentSerial == '4':
+                    print("Listening!") # You don't need this, but it's useful when debugging.
+                    frequency = random.randint(200, 1000) # Set Frequency To 2500 Hertz
+                    duration = 100 # Set Duration To 1000 ms == 1 second
+                    winsound.Beep(frequency, duration)
                 ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]  # 14:30:22.123
                 print(f"[{ts}] BAHADIR starting recording - INSIDE if")
                 audio = record_until_silence()
