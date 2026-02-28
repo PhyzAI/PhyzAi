@@ -25,3 +25,5 @@ coqui_training/train.txt
 coqui_training/val.txt
 coqui_training/dataset/wavs/audio1.mp3
 transcribe_status.txt
+speak_status.txt
+.gitignore
