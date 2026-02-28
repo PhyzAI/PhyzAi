@@ -1,3 +1,6 @@
+
+ATHOME=False
+
 from io import BytesIO
 
 import sounddevice as sd
@@ -33,8 +36,10 @@ HIGH_COMMAND = bytes('h', "utf-8")
 serialObj = None
 try:
     #COM4 on Phyz and COM3 on Bahadir's laptop
-    serialObj = serial.Serial('COM3', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
-    #serialObj = serial.Serial('COM4', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
+    if ATHOME:
+        serialObj = serial.Serial('COM3', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
+    else:
+        serialObj = serial.Serial('COM4', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
     serialObj.write(LOW_COMMAND)
     serialObj.flush()
     time.sleep(1)
@@ -44,7 +49,7 @@ except serial.SerialException as e:
 
 # For the continuous listening mode, we need True for listeningmode. For button activated mode
 # switch to False.
-listeningmode = True
+listeningmode = False
 
 
 speak = ttsx_speak
