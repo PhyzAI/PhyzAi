@@ -9,12 +9,12 @@ from threading import Thread
 import serial
 from rich import print as rp
 
-
+#need to change all COM4 to COM3 for Bahadir's laptop and vice versa for Phyz
 class ArduinoInput:
     CMD_LOW = b'l'
     CMD_HI = b'h'
 
-    def __init__(self, port: str = 'COM4', baud: int = 9600, delay: float = 1.0, **kwargs):
+    def __init__(self, port: str = 'COM3', baud: int = 9600, delay: float = 1.0, **kwargs):
         self.port = serial.Serial(
             port=port,
             baudrate=baud,
@@ -43,7 +43,7 @@ class ArduinoInput:
 
 
 def start_auto() -> Queue[bytes]:
-    port_name = 'COM4'
+    port_name = 'COM3'
     if Path('./port2').exists():
         rp(f'[yellow]Using Linux test port (local port2)[/]')
         port_name = './port2'

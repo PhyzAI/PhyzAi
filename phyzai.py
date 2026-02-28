@@ -22,6 +22,28 @@ from OPTIONS import prompt, TTS
 from ttsx import speak as ttsx_speak
 from mentorgreeter import check_for_new_mentors_and_greet
 from rich import print as rp
+import serial
+from datetime import datetime
+
+
+# Init communication with Arduino (optional: runs without serial if COM4 unavailable)
+LOW_COMMAND = bytes('l', "utf-8")
+HIGH_COMMAND = bytes('h', "utf-8")
+serialObj = None
+try:
+    #COM4 on Phyz and COM3 on Bahadir's laptop
+    serialObj = serial.Serial('COM3', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
+    #serialObj = serial.Serial('COM4', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
+    serialObj.write(LOW_COMMAND)
+    serialObj.flush()
+    time.sleep(1)
+except serial.SerialException as e:
+    rp(f"[yellow]Serial port COM4 not available: {e}[/yellow]")
+    rp("[yellow]Running without Arduino. Check Device Manager for the correct COM port.[/yellow]")
+
+# For the continuous listening mode, we need True for listeningmode. For button activated mode
+# switch to False.
+listeningmode = False
 
 
 speak = ttsx_speak
@@ -52,19 +74,35 @@ def audio_recorder_loop():
     with open("speak_status.txt", "r") as f:
         status = f.read().strip().lower()
         while True and status != "speaking":
-            audio = record_until_silence()
-            audio_queue.put(audio)
-            # Bahadir addition
-            f.seek(0)
-            status = f.read().strip().lower()
-            while True and status == "speaking":
-                time.sleep(0.1)
+            currentSerial = ''
+            #ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]  # 14:30:22.123
+            #print(f"[{ts}] BAHADIR - this is OUTSIDE the if statement")
+
+            if serialObj is not None and listeningmode == False:
+                serialObj.timeout = None  # blocking read
+                raw = serialObj.read()
+                currentSerial = raw.decode('ascii', errors='ignore') if raw else ''
+                #print(currentSerial)
+            if (listeningmode == True) or (currentSerial == '4'):
+
+                ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]  # 14:30:22.123
+                print(f"[{ts}] BAHADIR starting recording - INSIDE if")
+                audio = record_until_silence()
+                ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]  # 14:30:22.123
+                print(f"[{ts}] BAHADIR finished recording")
+                audio_queue.put(audio)
+                ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]  # 14:30:22.123
+                print(f"[{ts}] BAHADIR audio put in queue")
                 f.seek(0)
                 status = f.read().strip().lower()
-            print("Bahadir Debug listening loop")
+                ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]  # 14:30:22.123
+                print(f"[{ts}] BAHADIR status is {status}")
+                while True and status == "speaking":
+                    time.sleep(0.1)
+                    f.seek(0)
+                    status = f.read().strip().lower()
+                #print("Bahadir Debug listening loop")
 
-
-            
 
 
 
@@ -81,7 +119,7 @@ def main():
     dad_jokes = DadJokes()  # Load jokes once
     apologies = Apologies()  # Load apologies once
     thinking_lines = ThinkingLines()
-    control_queue = remote_control.start_auto()
+    #control_queue = remote_control.start_auto() #I don't know what this is for
     last_idle_response_time = 0  # separate from last user interaction
     IDLE_PROMPT_INTERVAL = 15    # seconds between idle prompts
     global last_interaction_time
@@ -99,11 +137,23 @@ def main():
     recorder_thread = threading.Thread(target=audio_recorder_loop, daemon=True)   # This is the thread that runs record until silence
     recorder_thread.start()
 
+#for speak, need to add Bahadir digital out for mouth
+#    serialObj.write(HIGH_COMMAND)
+#    serialObj.flush()
+
+#    around 
+#    speak("text")
+
+#    serialObj.write(LOW_COMMAND)   
+#    serialObj.flush()
+
+
+
     while True:
         try:
             # Try to get recorded audio
             audio_bytes = audio_queue.get(timeout=1)  # wait max 1 sec
-            print("Bahadir Debug speaking loop")
+            #print("Bahadir Debug speaking loop")
 
         except queue.Empty:
             current_time = time.time()
@@ -140,7 +190,7 @@ def main():
         #############################################################
         # Handle exit command
         #############################################################
-        if normalized == "exit":
+        if normalized == "exit" or "fizz exit" in normalized:
             print("Goodbye! PHYZAI session ended.")
             speak("goodbye")
             break
