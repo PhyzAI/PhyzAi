@@ -1,21 +1,31 @@
+import time
 import sounddevice as sd
 import webrtcvad    
 import collections
 import wave
 import numpy as np
-
-import sounddevice as sd
+import random
+import winsound
 import webrtcvad    
 import collections
 
 #Bahadir: original vad_aggressiveness was 2
-def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=0.8, vad_aggressiveness=3):
+def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=0.8, vad_aggressiveness=3, timeout=None):
     """
     Records audio from the microphone, starts recording when speech is detected,
     and stops recording shortly after speech ends.
 
+    Parameters:
+        sample_rate (int): sample rate for the input stream
+        frame_duration (int): duration of a frame in ms used by VAD
+        padding_duration (float): seconds of padding used to smooth start/stop
+        vad_aggressiveness (int): VAD aggressiveness level (0-3)
+        timeout (float|None): maximum number of seconds to wait before returning
+            If the timeout expires before speech/silence are detected the
+audio captured so far (which may be empty) is returned.
+
     Returns:
-        bytes: The raw audio bytes recorded.
+        bytes: The raw audio bytes recorded (may be empty on timeout).
     """
     vad = webrtcvad.Vad(vad_aggressiveness)
     frame_size = int(sample_rate * frame_duration / 1000)
@@ -24,13 +34,22 @@ def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=
     triggered = False
     voiced_frames = []
 
+    frequency = random.randint(400, 1000) # Set Frequency
+    duration = 300 # Set Duration To 1000 ms == 1 second
+    winsound.Beep(frequency, duration)
     stream = sd.InputStream(samplerate=sample_rate, channels=1, dtype='int16')
+    start_time = time.time()
 
     try:
         stream.start()
         print("Listening for speech...")
 
         while True:
+            # check timeout at top of loop so we don't hang forever
+            if timeout is not None and (time.time() - start_time) > timeout:
+                print("Timeout reached, returning audio captured so far.")
+                break
+
             try:
                 data, overflowed = stream.read(frame_size)
                 if overflowed:
