@@ -8,6 +8,7 @@ import queue
 import random
 from scipy.io import wavfile
 import winsound # make beeping noises
+import os
 
 import remote_control
 from apologies import Apologies
@@ -33,8 +34,10 @@ HIGH_COMMAND = bytes('h', "utf-8")
 serialObj = None
 try:
     #COM4 on Phyz and COM3 on Bahadir's laptop
-    serialObj = serial.Serial('COM3', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
-    #serialObj = serial.Serial('COM4', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
+    if os.environ.get("COMPUTERNAME") == "BAHADIRGRAM":
+        serialObj = serial.Serial('COM3', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
+    else:
+        serialObj = serial.Serial('COM4', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
     serialObj.write(LOW_COMMAND)
     serialObj.flush()
     time.sleep(1)
@@ -45,7 +48,6 @@ except serial.SerialException as e:
 # For the continuous listening mode, we need True for listeningmode. For button activated mode
 # switch to False.
 listeningmode = True
-
 
 speak = ttsx_speak
 # speak = TTS().speak
@@ -85,26 +87,18 @@ def audio_recorder_loop():
                 currentSerial = raw.decode('ascii', errors='ignore') if raw else ''
                 #print(currentSerial)
             if (listeningmode == True) or (currentSerial == '4'):
-                frequency = random.randint(200, 1000) # Set Frequency To 2500 Hertz
-                duration = 100 # Set Duration To 1000 ms == 1 second
+                frequency = random.randint(400, 1000) # Set Frequency
+                duration = 300 # Set Duration To 1000 ms == 1 second
                 winsound.Beep(frequency, duration)
-                #if currentSerial == '4':
-                #    print("Listening!") # You don't need this, but it's useful when debugging.
-                #    frequency = random.randint(200, 1000) # Set Frequency To 2500 Hertz
-                #    duration = 100 # Set Duration To 1000 ms == 1 second
-                #    winsound.Beep(frequency, duration)
-                ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]  # 14:30:22.123
-                print(f"[{ts}] BAHADIR starting recording - INSIDE if")
-                audio = record_until_silence()
-                ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]  # 14:30:22.123
-                print(f"[{ts}] BAHADIR finished recording")
+                #winsound.PlaySound('SystemAsterisk', winsound.SND_ALIAS)
+
+                audio = record_until_silence(timeout=20)  # seconds
+
                 audio_queue.put(audio)
-                ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]  # 14:30:22.123
-                print(f"[{ts}] BAHADIR audio put in queue")
+
                 f.seek(0)
                 status = f.read().strip().lower()
-                ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]  # 14:30:22.123
-                print(f"[{ts}] BAHADIR status is {status}")
+
                 while True and status == "speaking":
                     time.sleep(0.1)
                     f.seek(0)
