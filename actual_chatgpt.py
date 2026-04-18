@@ -15,7 +15,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "sk-your-api-key")
 
 
 
-def ask_chatgpt(system_prompt, user_prompt):
+def ask_chatgpt(system_prompt, user_prompt, memory_context=None):
     current_time = time.time()
 
     # 1. Filter for only recent messages
@@ -32,8 +32,17 @@ def ask_chatgpt(system_prompt, user_prompt):
     ]
 
     # 3. Add system and current user prompt
-    messages = [{"role": "system", "content": system_prompt}] + valid_messages
+    system_prompt_to_use = system_prompt
+    if memory_context:
+        # Add the most relevant stored memories to the system prompt.
+        system_prompt_to_use = (
+            f"{system_prompt}\n\nRelevant memories for this turn:\n{memory_context}"
+        )
+
+    messages = [{"role": "system", "content": system_prompt_to_use}] + valid_messages
     messages.append({"role": "user", "content": user_prompt})
+    
+    #print(messages) # DEBUG
 
     # 4. Store this user input in memory
     conversation_history.append({

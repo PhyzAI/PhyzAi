@@ -15,6 +15,7 @@ from apologies import Apologies
 from dadjokes import DadJokes
 from thinkingLines import ThinkingLines
 from actual_chatgpt import ask_chatgpt
+from memory_db import MemoryDB
 from transcriber import record_until_silence, transcribe_audio
 
 from idlechecker import check_idle_and_prompt_chatgpt
@@ -57,6 +58,9 @@ last_interaction_time = time.time()
 
 #Create space to store memory of responses
 conversation_history = []
+# Keep track of the last Q/A pair for "remember that" commands
+last_user_query: str | None = None
+last_assistant_response: str | None = None
 
 #System Prompt Definition
 SYSTEM_PROMPT = prompt
@@ -121,9 +125,16 @@ def main():
     dad_jokes = DadJokes()  # Load jokes once
     apologies = Apologies()  # Load apologies once
     thinking_lines = ThinkingLines()
+    memory_db = MemoryDB()  # Persistent memory storage (semantic vector store)
+
     #control_queue = remote_control.start_auto() #I don't know what this is for
     last_idle_response_time = 0  # separate from last user interaction
     IDLE_PROMPT_INTERVAL = 15    # seconds between idle prompts
+
+    # Track most recent question/answer pair for "remember that" support
+    last_user_query = None
+    last_assistant_response = None
+
     global last_interaction_time
 
     print("PHYZAI is listening... Say 'exit' to quit.")
@@ -249,16 +260,37 @@ def main():
         #Make prompt include mentors to address if Phyz is confused
         enhanced_prompt = augment_prompt_with_mentors(SYSTEM_PROMPT)
 
-        #Respond with Chat if Phyz is mentioned
+        # If user asked Phyz to remember the last Q/A pair, store it and don't call the LLM
+        if "remember that" in normalized or "remember this" in normalized:
+            if last_user_query and last_assistant_response:
+                memory_text = f"Q: {last_user_query}\nA: {last_assistant_response}"
+                memory_db.add_memory(memory_text)
+                rp(f"PHYZAI: [bold bright_green]memorized[/] {memory_text}")
+                speak("Got it. I will remember that.")
+            else:
+                rp("PHYZAI: [yellow]No previous question/answer to remember yet.[/]")
+                speak("I don't have anything to remember yet.")
+            continue
+
+        # Respond with Chat if Phyz is mentioned
         if any(word in normalized for word in trigger_words):
             # bahadir addition - three lines below
             flush_audio_queue()
             with open("speak_status.txt", "w", encoding="utf-8") as f:
                 f.write("speaking")
                 #print("Bahadir Debug heard Phyz")
-            response = ask_chatgpt(enhanced_prompt, transcription)
+
+            # Add relevant memories to the prompt before calling the LLM
+            memory_context = None
+            memories = memory_db.query(transcription, top_k=5)
+            if memories:
+                memory_context = "\n".join(f"- {m['text']}" for m in memories)
+
+            response = ask_chatgpt(enhanced_prompt, transcription, memory_context=memory_context)
             if response:
                 last_interaction_time = time.time()
+                last_user_query = transcription
+                last_assistant_response = response
                 rp(f"PHYZAI: [bold bright_green]saying[/] [green]llm[/] {response}")
                 speak(response)
 
