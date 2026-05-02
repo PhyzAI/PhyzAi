@@ -15,6 +15,8 @@ from apologies import Apologies
 from dadjokes import DadJokes
 from thinkingLines import ThinkingLines
 from actual_chatgpt import ask_chatgpt
+from actual_gemini import ask_gemini
+from actual_claude import ask_claude
 from memory_db import MemoryDB
 from transcriber import record_until_silence, transcribe_audio
 
@@ -208,6 +210,23 @@ def main():
             speak("goodbye")
             break
 
+        # Handle LLM switch voice commands
+        if "fizz switch to gemini" in normalized:
+            with open("llm2use.txt", "w", encoding="utf-8") as f:
+                f.write("gemini")
+            rp("[green]Switched LLM to Gemini[/]")
+            continue
+        if "fizz switch to claude" in normalized:
+            with open("llm2use.txt", "w", encoding="utf-8") as f:
+                f.write("claude")
+            rp("[green]Switched LLM to Claude[/]")
+            continue
+        if "fizz switch to chatgpt" in normalized:
+            with open("llm2use.txt", "w", encoding="utf-8") as f:
+                f.write("chatgpt")
+            rp("[green]Switched LLM to ChatGPT[/]")
+            continue
+
         # New: flush queue via voice command
         if normalized in ("flush", "clear queue", "clear audio queue"):
             flush_audio_queue()
@@ -286,7 +305,20 @@ def main():
             if memories:
                 memory_context = "\n".join(f"- {m['text']}" for m in memories)
 
-            response = ask_chatgpt(enhanced_prompt, transcription, memory_context=memory_context)
+            llm_choice = "chatgpt"
+            try:
+                with open("llm2use.txt", "r", encoding="utf-8") as llm_file:
+                    llm_choice = llm_file.read().strip().lower() or "chatgpt"
+            except FileNotFoundError:
+                pass
+
+            if llm_choice == "gemini":
+                response = ask_gemini(enhanced_prompt, transcription, memory_context=memory_context)
+            elif llm_choice == "claude":
+                response = ask_claude(enhanced_prompt, transcription, memory_context=memory_context)
+            else:
+                response = ask_chatgpt(enhanced_prompt, transcription, memory_context=memory_context)
+
             if response:
                 last_interaction_time = time.time()
                 last_user_query = transcription
