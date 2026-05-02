@@ -4,6 +4,10 @@ import os
 import random
 import time
 
+from actual_chatgpt import ask_chatgpt
+from OPTIONS import prompt
+from memory_db import MemoryDB
+
 MENTOR_FILE_PATH = "seen_mentors.txt"
 GREETINGS_FILE_PATH = "data/mentor_greetings.txt"
 
@@ -17,7 +21,7 @@ greeted_mentors = {}  # {mentor_name: last_greeted_timestamp}
 def check_for_new_mentors_and_greet(speak_fn):
     global greeted_mentors
     current_time = time.time()
-    TIME_TO_FORGET = 15  # seconds (adjust as needed)
+    TIME_TO_FORGET = 100  # seconds (adjust as needed)
 
     if not os.path.exists(MENTOR_FILE_PATH):
         return
@@ -33,8 +37,20 @@ def check_for_new_mentors_and_greet(speak_fn):
     for name in current_mentors:
         last_greeted = greeted_mentors.get(name, 0)
         if current_time - last_greeted > TIME_TO_FORGET:
-            greeting_template = random.choice(GREETINGS)
-            greeting = greeting_template.replace("{name}", name).replace("{Mentor}", name)
+            chat_prompt = (
+                f"Write a short, friendly greeting addressed to the mentor named {name}. "
+                "Keep it natural, warm, and a few sentences at most."
+            )
+            memory_db = MemoryDB()
+            memory_context = None
+            memories = memory_db.query(f"greeting for {name}", top_k=5)
+            if memories:
+                memory_context = "\n".join(f"- {m['text']}" for m in memories)
+            greeting = ask_chatgpt(prompt, chat_prompt, memory_context=memory_context)
+            if not greeting:
+                greeting_template = random.choice(GREETINGS)
+                greeting = greeting_template.replace("{name}", name).replace("{Mentor}", name)
+
             print(f"PHYZAI (mentor greet): {greeting}")
             speak_fn(greeting)
             greeted_mentors[name] = current_time
