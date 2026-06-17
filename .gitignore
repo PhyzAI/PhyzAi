@@ -14,7 +14,7 @@ baked_*.json
 prompt_cache.txt
 prompt_override_cache.txt
 .env
-
+.venv
 # Serial testing ports (Linux)
 /port1
 /port2

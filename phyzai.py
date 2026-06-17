@@ -7,7 +7,7 @@ import threading
 import queue
 import random
 from scipy.io import wavfile
-import winsound # make beeping noises
+# import winsound# make beeping noises
 import os
 
 import remote_control
@@ -95,7 +95,8 @@ def audio_recorder_loop():
             if (listeningmode == True) or (currentSerial == '4'):
                 frequency = random.randint(400, 1000) # Set Frequency
                 duration = 300 # Set Duration To 1000 ms == 1 second
-                winsound.Beep(frequency, duration)
+                # winsound.Beep(frequency, duration)
+                os.system('afplay /System/Library/Sounds/Glass.aiff')
                 #winsound.PlaySound('SystemAsterisk', winsound.SND_ALIAS)
 
                 audio = record_until_silence(timeout=20)  # seconds
