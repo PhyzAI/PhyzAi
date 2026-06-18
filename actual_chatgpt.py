@@ -4,6 +4,7 @@ import time
 
 from dotenv import load_dotenv
 from openai import OpenAI
+import actual_SLM
 conversation_history = []  # Global or persistent in-session
 MEMORY_DURATION = 120       # Amount of time to remember
 
@@ -65,7 +66,7 @@ def ask_chatgpt(system_prompt, user_prompt, memory_context=None):
             temperature=0.7,
             # stream=True,
         )
-        
+
         reply = response.choices[0].message.content.strip()
 
         # 5. Store assistant response in memory

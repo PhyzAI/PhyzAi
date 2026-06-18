@@ -11,6 +11,7 @@ from scipy.io import wavfile
 import os
 
 import remote_control
+from actual_SLM import should_remember
 from apologies import Apologies
 from dadjokes import DadJokes
 from thinkingLines import ThinkingLines
@@ -319,6 +320,12 @@ def main():
                 response = ask_claude(enhanced_prompt, transcription, memory_context=memory_context)
             else:
                 response = ask_chatgpt(enhanced_prompt, transcription, memory_context=memory_context)
+                if should_remember(transcription):
+                    to_remember = f"Q: {transcription}\nA: {response}" # I don't think we need to store the answer but we can for this example
+
+                    metadata = {"speaker": "ayaan"} # TODO: we want to associate the memories with the speaker, which can# be found via vision/voice recognition
+                    memory_db.add_memory(to_remember, metadata=metadata)
+
 
             if response:
                 last_interaction_time = time.time()

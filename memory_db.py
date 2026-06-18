@@ -2,16 +2,22 @@ import json
 import os
 import time
 
+from flask.cli import load_dotenv
 from openai import OpenAI
-
+load_dotenv()
 
 class MemoryDB:
     """Simple on-disk vector memory store backed by OpenAI embeddings."""
 
-    def __init__(self, file_path="data/memory_db.json", embedding_model="text-embedding-3-small"):
+    def __init__(self, file_path="data/memory_db.json", embedding_model="openai/text-embedding-3-small"):
         self.file_path = file_path
         self.embedding_model = embedding_model
-        self._client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "sk-your-api-key")
+
+        self._client = OpenAI(
+            base_url="https://models.github.ai/inference",
+            api_key=os.getenv("OPENAI_API_KEY"),
+        )
+
         self.memories = []
         self._load()
 
@@ -66,6 +72,18 @@ class MemoryDB:
         self.memories.append(entry)
         self._save()
         return item_id
+
+    def filter_by_metadata(self, key: str, value: str): #metadata filter
+        """Filter memories based on the provided criteria."""
+        filtered_memories = []
+        for entry in self.memories:
+            try: #try to filter by the selected key, just ignore if it doesn't exist
+                if entry["metadata"][key] == value:
+                    filtered_memories.append(entry)
+            except KeyError:
+                pass
+        return filtered_memories
+
 
     def query(self, query_text: str, top_k: int = 5):
         """Return the top-K most relevant memory texts for the query."""
