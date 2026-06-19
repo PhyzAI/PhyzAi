@@ -34,10 +34,10 @@
 
 HOME = False   # At Keith's house
 enable_GUI = False
-enable_MC = True # enable Motor Control
+enable_MC = False # enable Motor Control
 enable_face_detect = True
-enable_face_recog = False
-enable_ball_detect=True
+enable_face_recog = True
+enable_ball_detect=False
 enable_show_phyz_loc = True
 enable_randomize_look = False # Look around a little bit for each face
 enable_face_camera = True # Look more straight ahead
@@ -58,22 +58,19 @@ HEAD_OFFSET_Y = 0
 
 
 import pygame
-import cv2 
 import numpy as np
 import face_recognition
 import time
 from facenet_pytorch import MTCNN
 
 import os
-import glob
 import re
 import math
 
 
 # Basic YOLO object detection
-import torch
 import cv2
-from ultralytics import YOLO  # Use YOLO from the Ultralytics library
+from ultralytics import YOLO  # Use YOLO from the Ultralytics library <-- used for detecting the ball
 # Load a pre-trained YOLO model
 # You can specify "yolov5s.pt" or "yolov8s.pt" (small model versions) or other model sizes for different performance
 #model = YOLO("yolov8n.pt")  # 'n' for nano model, fast and lightweight for real-time detection
@@ -658,7 +655,10 @@ while True:
         move_physical_position((person_x, person_y), head_angle, arm_left_axis, arm_right_axis)
 
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord('s'):
+        name = input("Enter Name: ")
+        cv2.imwrite(f"./KnownFaces/{name}.jpg", frame)
+    elif cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
     events = pygame.event.get()

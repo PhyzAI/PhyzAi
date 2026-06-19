@@ -322,8 +322,12 @@ def main():
                 response = ask_chatgpt(enhanced_prompt, transcription, memory_context=memory_context)
                 if should_remember(transcription):
                     to_remember = f"Q: {transcription}\nA: {response}" # I don't think we need to store the answer but we can for this example
+                    with open("seen_mentors.txt", "w", encoding="utf-8") as f:
+                        metadata = None
+                        line = f.readlines()
+                        if line is not None:
+                            metadata = {"speaker": line}  # just throwing whoever is seen onto the speaker metadata
 
-                    metadata = {"speaker": "ayaan"} # TODO: we want to associate the memories with the speaker, which can# be found via vision/voice recognition
                     memory_db.add_memory(to_remember, metadata=metadata)
 
 

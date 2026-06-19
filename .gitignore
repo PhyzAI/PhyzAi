@@ -15,6 +15,7 @@ prompt_cache.txt
 prompt_override_cache.txt
 .env
 .venv
+yolo11s.pt
 # Serial testing ports (Linux)
 /port1
 /port2
