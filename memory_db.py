@@ -49,6 +49,7 @@ class MemoryDB:
 
     def add_memory(self, text: str, metadata: dict | None = None) -> str:
         """Store a new memory item (text + embedding) and persist to disk."""
+        print("Adding data to memory")
         # Ensure we only store non-empty strings
         if not text or not text.strip():
             raise ValueError("Memory text must be a non-empty string")

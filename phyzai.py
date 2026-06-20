@@ -4,6 +4,7 @@ import sounddevice as sd
 import whisper
 import time
 import threading
+from concurrent.futures import ThreadPoolExecutor
 import queue
 import random
 from scipy.io import wavfile
@@ -320,7 +321,11 @@ def main():
                 response = ask_claude(enhanced_prompt, transcription, memory_context=memory_context)
             else:
                 response = ask_chatgpt(enhanced_prompt, transcription, memory_context=memory_context)
-                if should_remember(transcription):
+                with ThreadPoolExecutor() as executor:
+                    future = executor.submit(should_remember, transcription)
+                    result = future.result()
+
+                if result:
                     to_remember = f"Q: {transcription}\nA: {response}" # I don't think we need to store the answer but we can for this example
                     with open("seen_mentors.txt", "w", encoding="utf-8") as f:
                         metadata = None
