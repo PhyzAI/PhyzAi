@@ -19,22 +19,34 @@ def should_remember(prompt: str, memory_context=None) -> bool:
     if any(word in prompt for word in remembering_keywords): #if they don't pass this, then pass it to the slm
         return True
 
+
+    temp = 0.7
     messages.append({'role': 'user', 'content': f"\"{prompt}\""})
-    response = chat(
-        model='smollm2',
-        messages=messages,
-        # options={temperature: 0.5}
-    )
+    while True:
+        response = chat(
+            model='smollm2',
+            messages=messages,
+            options={temperature: temp}
+        )
 
-    response2 = chat(
-        model='llama3.1:8b',
-        messages=messages,
-        # options={temperature: 0.5}
-    )
+        response2 = chat(
+            model='llama3.1:8b',
+            messages=messages,
+            options={temperature: temp}
+        )
 
-    print(response.message.content)
-    print(response2.message.content)
+        print(response.message.content)
+        print(response2.message.content)
+
+        llm1 = "yes" in response.message.content.lower()
+        llm2 = "yes" in response2.message.content.lower()
+
+        if llm1 == llm2: #both yesses
+           return True
+
+        temp-=0.1
+        print(f"prompting again: temperature {temp}")
 
 
 if __name__ == "__main__":
-    print(should_remember("I really love bananas"))
+    print(should_remember("Ayaan remembers that his cats name was Mira"))

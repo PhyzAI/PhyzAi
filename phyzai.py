@@ -182,7 +182,7 @@ def main():
 
 
             response, last_idle_response_time = check_idle_and_prompt_chatgpt(
-                last_interaction_time, last_idle_response_time
+                last_interaction_time, last_idle_response_time, memory_db
             )
             if response:
                 print(f"PHYZAI (idle): {response}")
@@ -344,7 +344,7 @@ def main():
                 speak(response)
 
 
-        if (check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time))[0]:
+        if (check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time, memory_db))[0]:
             last_interaction_time = time.time()
 
 
