@@ -1,11 +1,9 @@
 from ollama import chat
-from sympy.physics.units import temperature
 
 # print(response.message.content)
 sysprompt = ""
-with open("slm_prompt.txt", "r") as f:
+with open("slm_prompt.txt", "r") as f: #tips for prompt: give examples, keep it simple, and only yes/no answers
     sysprompt += f.read()
-messages = [{'role': 'system', 'content': sysprompt}]
 
 remembering_keywords = ["I like", "I want", "I have", "My favorite", "I am"] #simple manual filter for basic questions
 
@@ -20,32 +18,52 @@ def should_remember(prompt: str, memory_context=None) -> bool:
         return True
 
 
-    temp = 0.7
-    messages.append({'role': 'user', 'content': f"\"{prompt}\""})
-    while True:
-        response = chat(
-            model='smollm2',
-            messages=messages,
-            options={temperature: temp}
-        )
 
-        response2 = chat(
-            model='llama3.1:8b',
-            messages=messages,
-            options={temperature: temp}
-        )
+    prompts = [
+        "Ayaan remembers that his cat's name was Mira",
+        "His cat's name was Mira",
+        "The cat's name was Mira",
+        "Ayaan likes robotics",
+        "Robotics is cool",
+        "What is robotics?"
+    ]
 
-        print(response.message.content)
-        print(response2.message.content)
+    aprompts = [
+        "Bahadir used to play soccer on the street with his friends",
+        "The world cup is on",
+        "The world cup is fun",
+        "Ayaan wants Scotland to win the world cup",
+        "I like sports"
+    ]
 
-        llm1 = "yes" in response.message.content.lower()
-        llm2 = "yes" in response2.message.content.lower()
 
-        if llm1 == llm2: #both yesses
-           return True
+    for prompt in prompts:
+        temp = 0.7
+        print("\n\n\n\n")
+        messages = [{'role': 'system', 'content': sysprompt}, {'role': 'user', 'content': f"\"{prompt}\""}]
+        while temp>=0.1:
+            response = chat(
+                model='smollm2',
+                messages=messages,
+                options={"temperature": temp}
+            )
+            response2 = chat(
+                model='llama3.1:8b',
+                messages=messages,
+                options={"temperature": temp}
+            )
 
-        temp-=0.1
-        print(f"prompting again: temperature {temp}")
+            print(f"smollm2: {prompt} @ {temp}: {response.message.content}")
+            print(f"llama3.1: {prompt} @ {temp}: {response2.message.content}")
+            print("\n")
+            llm1 = "yes" in response.message.content.lower()
+            llm2 = "yes" in response2.message.content.lower()
+
+            if llm1 == llm2: #both yesses
+               break
+
+            temp-=0.1
+            # print(f"prompting again: temperature {temp}")
 
 
 if __name__ == "__main__":
