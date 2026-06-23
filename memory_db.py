@@ -112,3 +112,33 @@ class MemoryDB:
                 "metadata": entry.get("metadata"),
             })
         return top
+
+    def does_memory_exist(self, query_text: str, accepted_similarity: float = 0.95) -> bool:
+        """Try to find if a similar memory is already existing in the database"""
+        if not self.memories:
+            return False
+
+        embedding = self._client.embeddings.create(
+            model=self.embedding_model,
+            input=query_text,
+        ).data[0].embedding
+
+        for entry in self.memories:
+            score = self._cosine_similarity(embedding, entry.get("embedding", []))
+            print(f"{entry['text']}\n{score}\n\n")
+
+            if score >= accepted_similarity:
+                return True
+
+        return False
+
+    def write_memories(self):
+        """just print out the memory text"""
+        for entry in self.memories:
+            print(entry["text"])
+
+
+if __name__ == "__main__":
+    db = MemoryDB()
+    # db.write_memories()
+    print(db.does_memory_exist("Scotland should win the world cup", accepted_similarity=0.6))

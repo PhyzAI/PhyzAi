@@ -321,6 +321,7 @@ def main():
                 response = ask_claude(enhanced_prompt, transcription, memory_context=memory_context)
             else:
                 response = ask_chatgpt(enhanced_prompt, transcription, memory_context=memory_context)
+
                 with ThreadPoolExecutor() as executor:
                     future = executor.submit(should_remember, transcription)
                     result = future.result()

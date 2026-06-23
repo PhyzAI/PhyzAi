@@ -1,5 +1,7 @@
 from ollama import chat
 
+from memory_db import MemoryDB
+
 # print(response.message.content)
 sysprompt = ""
 with open("slm_prompt.txt", "r") as f: #tips for prompt: give examples, keep it simple, and only yes/no answers
@@ -8,31 +10,35 @@ with open("slm_prompt.txt", "r") as f: #tips for prompt: give examples, keep it 
 remembering_keywords = ["I like", "I want", "I have", "My favorite", "I am"] #simple manual filter for basic questions
 
 def should_remember(prompt: str, memory_context=None) -> bool:
-    # Factors to consider: is the information in the prompt something that can be searched on the internet?
+    # Factors to consider: is the information in the prompt something that can be searched on the internet?, also, do I already know this?
     # Does the statement contain the word "I" in it (I have, I like, I want, etc.)
     # Do I know who I am currently talking to?
     # If Phyz knows who they are talking to, remember the data under that user's name, if not, remember under the "guest" username
     # Can use vision/face recognition to identify faces
 
+    memory_db = MemoryDB()
+    exists = memory_db.does_memory_exist(prompt, accepted_similarity=0.6)
+    if exists: return False
+
     if any(word in prompt for word in remembering_keywords): #if they don't pass this, then pass it to the slm
         return True
 
-    prompts = [
-        "Ayaan remembers that his cat's name was Mira",
-        "His cat's name was Mira",
-        "The cat's name was Mira",
-        "Ayaan likes robotics",
-        "Robotics is cool",
-        "What is robotics?"
-    ]
-
-    aprompts = [
-        "Bahadir used to play soccer on the street with his friends",
-        "The world cup is on",
-        "The world cup is fun",
-        "Ayaan wants Scotland to win the world cup",
-        "I like sports"
-    ]
+    # prompts = [ #just for testing
+    #     "Ayaan remembers that his cat's name was Mira",
+    #     "His cat's name was Mira",
+    #     "The cat's name was Mira",
+    #     "Ayaan likes robotics",
+    #     "Robotics is cool",
+    #     "What is robotics?"
+    # ]
+    #
+    # aprompts = [
+    #     "Bahadir used to play soccer on the street with his friends",
+    #     "The world cup is on",
+    #     "The world cup is fun",
+    #     "Ayaan wants Scotland to win the world cup",
+    #     "I like sports"
+    # ]
 
     # for prompt in prompts:
     temp = 0.7
