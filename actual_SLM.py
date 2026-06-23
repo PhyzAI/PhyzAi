@@ -17,8 +17,6 @@ def should_remember(prompt: str, memory_context=None) -> bool:
     if any(word in prompt for word in remembering_keywords): #if they don't pass this, then pass it to the slm
         return True
 
-
-
     prompts = [
         "Ayaan remembers that his cat's name was Mira",
         "His cat's name was Mira",
@@ -36,35 +34,36 @@ def should_remember(prompt: str, memory_context=None) -> bool:
         "I like sports"
     ]
 
+    # for prompt in prompts:
+    temp = 0.7
+    print("\n\n\n\n")
+    messages = [{'role': 'system', 'content': sysprompt}, {'role': 'user', 'content': f"\"{prompt}\""}]
+    while temp>=0.1:
+        response = chat(
+            model='smollm2',
+            messages=messages,
+            options={"temperature": temp}
+        )
+        response2 = chat(
+            model='llama3.1:8b',
+            messages=messages,
+            options={"temperature": temp}
+        )
 
-    for prompt in prompts:
-        temp = 0.7
-        print("\n\n\n\n")
-        messages = [{'role': 'system', 'content': sysprompt}, {'role': 'user', 'content': f"\"{prompt}\""}]
-        while temp>=0.1:
-            response = chat(
-                model='smollm2',
-                messages=messages,
-                options={"temperature": temp}
-            )
-            response2 = chat(
-                model='llama3.1:8b',
-                messages=messages,
-                options={"temperature": temp}
-            )
+        print(f"smollm2: {prompt} @ {temp}: {response.message.content}")
+        print(f"llama3.1: {prompt} @ {temp}: {response2.message.content}")
+        print("\n")
+        llm1 = "yes" in response.message.content.lower()
+        llm2 = "yes" in response2.message.content.lower()
 
-            print(f"smollm2: {prompt} @ {temp}: {response.message.content}")
-            print(f"llama3.1: {prompt} @ {temp}: {response2.message.content}")
-            print("\n")
-            llm1 = "yes" in response.message.content.lower()
-            llm2 = "yes" in response2.message.content.lower()
+        if llm1 == llm2 == True: #both yesses
+           return True
+        elif llm1 == llm2 == False: #both noos or unsure verdict
+           return False
 
-            if llm1 == llm2: #both yesses
-               break
-
-            temp-=0.1
-            # print(f"prompting again: temperature {temp}")
-
+        temp-=0.1
+        # print(f"prompting again: temperature {temp}")
+    return False #unsure verdict
 
 if __name__ == "__main__":
     print(should_remember("Ayaan remembers that his cats name was Mira"))
