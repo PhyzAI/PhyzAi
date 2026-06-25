@@ -575,7 +575,7 @@ while True:
         # Check for newly seen mentors
         new_names = current_names - seen_mentors
 
-        for name in new_names:
+        for name in new_names: # this is when seen mentors are added but this is purely from vision code in phyzai.py adds them by prompt recognition
             with open(seen_mentors_file, "a", encoding="utf-8") as f:
                 f.write(f"{name}\n")
             seen_mentors.add(name)

@@ -11,6 +11,8 @@ from scipy.io import wavfile
 # import winsound# make beeping noises
 import os
 
+from sympy.physics.quantum.gate import normalized
+
 import remote_control
 from actual_SLM import should_remember
 from apologies import Apologies
@@ -294,6 +296,16 @@ def main():
                 speak("I don't have anything to remember yet.")
             continue
 
+        with open("names2know.txt", "r") as nameFile:
+            for name in nameFile.readlines():
+                if f"I am {name.strip().lower()}" in normalized or f"This is {name.strip().lower()}" in normalized:
+                    with open("seen_mentors.txt", "a+", encoding="utf-8") as f:  # read and append mode
+                        f.seek(0) #start at beginning of file
+                        contents = f.read()
+                        if name.strip().lower() not in contents:
+                            f.write(f"{name.strip().lower()}\n")
+                            print(f"added {name.strip().lower()} to seen mentors file")
+
         # Respond with Chat if Phyz is mentioned
         if any(word in normalized for word in trigger_words):
             # bahadir addition - three lines below
@@ -328,7 +340,7 @@ def main():
 
                 if result:
                     to_remember = f"Q: {transcription}\nA: {response}" # I don't think we need to store the answer but we can for this example
-                    with open("seen_mentors.txt", "w", encoding="utf-8") as f:
+                    with open("seen_mentors.txt", "r", encoding="utf-8") as f:
                         metadata = None
                         line = f.readlines()
                         if line is not None:
