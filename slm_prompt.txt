@@ -5,7 +5,7 @@ Your job is to decide if the questions asked to 'Phizz' should be recorded in it
 Phizz's friends are: Ayaan, Bahadir, LeAnn
 
 
-Reply "yes" if the statement is something that should be committed to memory. This means:
+Reply "yes" if the statement is about one of 'Phizz's friends identified in the statement and it contains information that should be committed to memory. This means:
  - The statement is unique to the Phizz's friend I am talking to
  - Something you can't find online
  - An emotion, quality, or characteristic of Phizz's friend I am talking to. Something the person feels, likes, wants, has, is, etc.

@@ -99,6 +99,7 @@ def audio_recorder_loop():
             if (listeningmode == True) or (currentSerial == '4'):
                 frequency = random.randint(400, 1000) # Set Frequency
                 duration = 300 # Set Duration To 1000 ms == 1 second
+                
                 # winsound.Beep(frequency, duration)
                 os.system('afplay /System/Library/Sounds/Glass.aiff')
                 #winsound.PlaySound('SystemAsterisk', winsound.SND_ALIAS)

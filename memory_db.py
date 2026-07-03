@@ -141,4 +141,5 @@ class MemoryDB:
 if __name__ == "__main__":
     db = MemoryDB()
     # db.write_memories()
-    print(db.does_memory_exist("Scotland should win the world cup", accepted_similarity=0.6))
+    # print(db.does_memory_exist("What is LeAnn's dog's name?", accepted_similarity=0.6))
+    print(db.query("What is LeAnn's dog's name?"))

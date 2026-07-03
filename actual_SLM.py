@@ -1,5 +1,10 @@
+from flask.cli import load_dotenv
 from ollama import chat
+import os
 
+from openai import OpenAI
+
+load_dotenv()
 from memory_db import MemoryDB
 
 # print(response.message.content)
@@ -20,56 +25,73 @@ def should_remember(prompt: str, memory_context=None) -> bool:
     exists = memory_db.does_memory_exist(prompt, accepted_similarity=0.6)
     if exists: return False
 
+    client = OpenAI(
+        base_url="https://models.github.ai/inference",
+        api_key=os.getenv("OPENAI_API_KEY"),
+    )
+
+
     if any(word in prompt for word in remembering_keywords): #if they don't pass this, then pass it to the slm
         return True
 
-    # prompts = [ #just for testing
-    #     "Ayaan remembers that his cat's name was Mira",
-    #     "His cat's name was Mira",
-    #     "The cat's name was Mira",
-    #     "Ayaan likes robotics",
-    #     "Robotics is cool",
-    #     "What is robotics?"
-    # ]
-    #
-    # aprompts = [
-    #     "Bahadir used to play soccer on the street with his friends",
-    #     "The world cup is on",
-    #     "The world cup is fun",
-    #     "Ayaan wants Scotland to win the world cup",
-    #     "I like sports"
-    # ]
+    prompts = [ #just for testing
+        "Sam remembers that his dog name was Bob",
+        "LeAnn remembers that her dog's name was John",
+        "His dog's name was Bob",
+        "The dog's name was Bob",
+        "George likes robotics",
+        "Robotics is cool",
+        "What is robotics?"
+    ]
 
-    # for prompt in prompts:
-    temp = 0.7
-    print("\n\n\n\n")
-    messages = [{'role': 'system', 'content': sysprompt}, {'role': 'user', 'content': f"\"{prompt}\""}]
-    while temp>=0.1:
-        response = chat(
-            model='smollm2',
-            messages=messages,
-            options={"temperature": temp}
-        )
-        response2 = chat(
-            model='llama3.1:8b',
-            messages=messages,
-            options={"temperature": temp}
-        )
+    aprompts = [
+        "Bahadir used to play soccer on the street with his friends",
+        "The world cup is on",
+        "The world cup is fun",
+        "Ayaan wants Scotland to win the world cup",
+        "I like sports"
+    ]
 
-        print(f"smollm2: {prompt} @ {temp}: {response.message.content}")
-        print(f"llama3.1: {prompt} @ {temp}: {response2.message.content}")
-        print("\n")
-        llm1 = "yes" in response.message.content.lower()
-        llm2 = "yes" in response2.message.content.lower()
+    for prompt in prompts:
+        temp = 0.7
+        print("\n\n\n\n")
+        messages = [{'role': 'system', 'content': sysprompt}, {'role': 'user', 'content': f"\"{prompt}\""}]
+        while temp>=0.1:
+            response = chat(
+                model='smollm2',
+                messages=messages,
+                options={"temperature": temp}
+            )
+            response2 = chat(
+                model='llama3.1:8b',
+                messages=messages,
+                options={"temperature": temp}
+            )
+            response3 = client.chat.completions.create(
+                messages=messages,
+                model="gpt-4o",
+                temperature=temp,
+            )
 
-        if llm1 == llm2 == True: #both yesses
-           return True
-        elif llm1 == llm2 == False: #both noos or unsure verdict
-           return False
+            print(f"smollm2: {prompt} @ {temp}: {response.message.content}")
+            print(f"llama3.1: {prompt} @ {temp}: {response2.message.content}")
+            print(f"gpt-4o: {prompt} @ {temp}: {response3.choices[0].message.content}")
 
-        temp-=0.1
-        # print(f"prompting again: temperature {temp}")
-    return False #unsure verdict
+            print("\n")
+            slm1 = "yes" in response.message.content.lower()
+            slm2 = "yes" in response2.message.content.lower()
+            llm3 = "yes" in response3.choices[0].message.content.lower()
+
+            if slm1 == slm2 == llm3 == True: #both yesses
+               # return True
+                break
+            elif slm1 == slm2 == llm3 == False: #both noos or unsure verdict
+               break
+               # return False
+
+            temp-=0.1
+            # print(f"prompting again: temperature {temp}")
+    # return False #unsure verdict
 
 if __name__ == "__main__":
     print(should_remember("Ayaan remembers that his cats name was Mira"))
