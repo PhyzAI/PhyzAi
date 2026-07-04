@@ -34,6 +34,7 @@ from rich import print as rp
 import serial
 from datetime import datetime
 
+from voice_db import Voice_DB
 
 # Init communication with Arduino (optional: runs without serial if COM4 unavailable)
 LOW_COMMAND = bytes('l', "utf-8")
@@ -105,7 +106,9 @@ def audio_recorder_loop():
                 #winsound.PlaySound('SystemAsterisk', winsound.SND_ALIAS)
 
                 audio = record_until_silence(timeout=20)  # seconds
-
+                voice_db = Voice_DB()
+                print(voice_db.find_speaker(audio)) # print the speaker
+                
                 audio_queue.put(audio)
 
                 f.seek(0)
