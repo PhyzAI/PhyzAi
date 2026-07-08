@@ -16,6 +16,7 @@ prompt_override_cache.txt
 .env
 .venv
 yolo11s.pt
+data/known_voices/
 # Serial testing ports (Linux)
 /port1
 /port2

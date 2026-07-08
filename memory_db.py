@@ -141,12 +141,15 @@ class MemoryDB:
 if __name__ == "__main__":
     db = MemoryDB()
     # db.write_memories()
-    # print(db.does_memory_exist("What is LeAnn's dog's name?", accepted_similarity=0.6))
+    print(db.does_memory_exist("What is LeAnn's dog's name?", accepted_similarity=0.6))
     # print(db.does_memory_exist("Does Bahadir enjoy math?"))
-    print(db.query("Does Bahadir enjoy math?"))
-    print(db.query("Does Bahadir like math?"))
-    print(db.query("Is Bahadir good at math?"))
-    print(db.query("Is Bahadir a math person?"))
-    print(db.query("Who likes math?"))
+    # print(db.query("Does Bahadir enjoy math?"))
+    # print(db.query("Does Bahadir like math?"))
+    # print(db.query("Is Bahadir good at math?"))
+    # print(db.query("Is Bahadir a math person?"))
+    # print(db.query("Who likes math?"))
+    # print(db.query("I really love math, its my favorite subject!"))
     # print(db.does_memory_exist("In his free time, Bahadir enjoys puzzles and physics"))
+
+    print(db.query("How did Keith contribute to Phyz?", top_k=3))
     # Structured testing
