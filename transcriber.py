@@ -89,7 +89,7 @@ audio captured so far (which may be empty) is returned.
     finally:
         stream.stop()
         stream.close()
-
+    
     return b''.join(voiced_frames)
 
 def save_wav(filename, audio_data, sample_rate=16000):
