@@ -10,7 +10,7 @@ import os
 from sklearn import svm
 
 import memory_db
-from transcriber import record_until_silence
+from transcriber import record_until_silence, save_wav
 from sklearn.svm import SVC
 
 
@@ -19,7 +19,7 @@ from sklearn.svm import SVC
 class Voice_DB:
     def __init__(self):
         self.file_path = "data/voice_embeds.json"
-        self.comparison_threshold = 0.75
+        self.comparison_threshold = 0.70
         self.embeds = []
 
     def _load(self): #literally just copied from memory_db.py
@@ -91,32 +91,48 @@ class Voice_DB:
 
         for user in self.embeds:
             score = memory_db.MemoryDB._cosine_similarity(user["embed"], embed)
+            print(f"Score: {score}")
             if score >= self.comparison_threshold:
                 return user["speaker"]
         return None
 
-    # def svm(self, current, audio2check):
-    #     # X_train: Matrix of embeddings from your enrolled users + background "imposter" voices
-    #     # y_train: Labels corresponding to the speaker IDs
-    #     X_train = np.array([current[0]["embed"], current[1]["embed"], current[2]["embed"], current[3]["embed"], current[4]["embed"]])
-    #     y_train = np.array([1, 1, 1, 0, 0])  # 1 = Target User, 0 = Someone Else
-    #     # these are pre sorted now
-    #
-    #     # Train a Linear SVM with probability outputs enabled
-    #     clf = SVC(kernel='linear', probability=True)
-    #     clf.fit(X_train, y_train)
-    #
-    #     # Test a completely new embedding vector
-    #     # predict_proba returns [Probability of being an imposter, Probability of being Target]
-    #     confidence_scores = clf.predict_proba([audio2check])[0]
-    #     print(f"Confidence that this is the target speaker: {confidence_scores[1] * 100:.2f}%")
+    def svm(self, current, audio2check):
+        # X_train: Matrix of embeddings from your enrolled users + background "imposter" voices
+        # y_train: Labels corresponding to the speaker IDs
+        X_train = np.array([current[0]["embed"], current[1]["embed"], current[2]["embed"], current[3]["embed"], current[4]["embed"]])
+        y_train = np.array([1, 1, 1, 0, 0])  # 1 = Target User, 0 = Someone Else
+        # these are pre sorted now
+
+        # Train a Linear SVM with probability outputs enabled
+        clf = SVC(kernel='linear', probability=True)
+        clf.fit(X_train, y_train)
+
+        # Test a completely new embedding vector
+        # predict_proba returns [Probability of being an imposter, Probability of being Target]
+        confidence_scores = clf.predict_proba([audio2check])[0]
+        print(f"Confidence that this is the target speaker: {confidence_scores[1] * 100:.2f}%")
+
+
+    def collect_voices(self, username, training_count, gen_embeds=False): # its best to collect voices using different mics, and different angles - see voice_training.txt for training lines
+        for i in range(training_count):  # x voice samples
+            print(f"Recording for sample {i}")
+            audio = record_until_silence()
+            filename = f"data/known_voices/{username}/Sample{i:02d}.wav"
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            save_wav(filename=filename,
+                     audio_data=audio)  # 2 digit number format, change the user for who you're recording for
+            print(f"Saved for sample {i}")
+
+        if gen_embeds:
+            print(f"Generating the embeddings for: {username}")
+            self.add_all(path=f"data/known_voices/{username}")
 
 
 
 if __name__ == "__main__":
-    # vdb = Voice_DB()
+    vdb = Voice_DB()
     # vdb.add_all()
 
-    audio = record_until_silence()  # seconds
-    voice_db = Voice_DB()
-    print(voice_db.find_speaker(audio))  # print the speaker
+    # audio = record_until_silence()  # seconds
+    # voice_db = Voice_DB()
+    # print(voice_db.find_speaker(audio))  # print the speaker
