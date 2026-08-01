@@ -91,6 +91,7 @@ class Voice_DB:
 
         for user in self.embeds:
             score = memory_db.MemoryDB._cosine_similarity(user["embed"], embed)
+            print(score)
             if score >= self.comparison_threshold:
                 return user["speaker"]
         return None
