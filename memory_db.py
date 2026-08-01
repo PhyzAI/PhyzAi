@@ -9,14 +9,11 @@ load_dotenv()
 class MemoryDB:
     """Simple on-disk vector memory store backed by OpenAI embeddings."""
 
-    def __init__(self, file_path="data/memory_db.json", embedding_model="openai/text-embedding-3-small"):
+    def __init__(self, file_path="data/memory_db.json", embedding_model="text-embedding-3-small"):
         self.file_path = file_path
         self.embedding_model = embedding_model
 
-        self._client = OpenAI(
-            base_url="https://models.github.ai/inference",
-            api_key=os.getenv("OPENAI_API_KEY"),
-        )
+        self._client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "sk-your-api-key")
 
         self.memories = []
         self._load()

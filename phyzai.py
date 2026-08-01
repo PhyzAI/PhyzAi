@@ -106,9 +106,6 @@ def audio_recorder_loop():
                 #winsound.PlaySound('SystemAsterisk', winsound.SND_ALIAS)
 
                 audio = record_until_silence(timeout=20)  # seconds
-                voice_db = Voice_DB()
-                # speaker = voice_db.find_speaker(audio)
-                
                 audio_queue.put(audio)
 
                 f.seek(0)
@@ -206,9 +203,13 @@ def main():
         #       if button not pressed and pressed flag is true then call record until silence       
         #(This allows us to not accidentally double call a method if the button is being held down)
 
-        transcription = transcribe_audio(model, audio_bytes)  
-        rp(f"[cyan][bold]You said:[/] {transcription}[/]")
+        voice_db = Voice_DB()
+        speaker = voice_db.find_speaker(audio_bytes)
 
+        transcription = transcribe_audio(model, audio_bytes)
+        
+        if speaker != "Unknown User": transcription = f"{speaker} said: {transcription}" # add who is speaking to the transcription
+        rp(f"[cyan][bold]{speaker} said:[/] {transcription}[/]")
         normalized = transcription.lower().strip().strip(".!?")
 
         #############################################################

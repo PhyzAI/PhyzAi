@@ -26,6 +26,7 @@ class Voice_DB:
         self.file_path = "data/voice_embeds.json"
         self.comparison_threshold = 0.70
         self.embeds = []
+        self.voice_checking_priority = ["Bahadir", "LeAnn", "Keith"]
 
     def _load(self): #literally just copied from memory_db.py
         os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
@@ -82,17 +83,22 @@ class Voice_DB:
             source="speechbrain/spkrec-ecapa-voxceleb" #ECAPA-TDNN based encoder
         )
         embedding = classifier.encode_batch(wave_tensor).squeeze()
+        current = torch.as_tensor(embedding, dtype=torch.float32).squeeze()
 
-        for user in self.embeds:
-            # score = memory_db.MemoryDB._cosine_similarity(user["embed"], embedding.tolist())
+        relevant = [x for x in self.embeds if x["speaker"] in self.voice_checking_priority]
+        rest = [x for x in self.embeds if x["speaker"] not in self.voice_checking_priority]
+
+        new_order = relevant + rest
+
+        for user in new_order:
+            #Checks Bahadir first and then the rest of the priority then everyone else
             saved = torch.as_tensor(user["embed"], dtype=torch.float32).squeeze()
-            current = torch.as_tensor(embedding, dtype=torch.float32).squeeze()
             score = F.cosine_similarity(saved, current, dim=0).item()
-            print(f"Score: {score}")
-
             if score >= self.comparison_threshold:
+                print(f"User: {user['speaker']} Score: {score}")
                 return user["speaker"]
-        return None
+
+        return "Unknown User"
 
     # def svm(self, current, audio2check):
     #     # X_train: Matrix of embeddings from your enrolled users + background "imposter" voices
