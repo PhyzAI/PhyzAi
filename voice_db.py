@@ -1,9 +1,6 @@
+from pathlib import Path
+
 import torch
-# SpeechBrain autocast patch for PyTorch on CPU/macOS
-# if not hasattr(torch.amp, "custom_fwd"):
-#     torch.amp.custom_fwd = torch.cuda.amp.custom_fwd
-# if not hasattr(torch.amp, "custom_bwd"):
-#     torch.amp.custom_bwd = torch.cuda.amp.custom_bwd
 
 import torchaudio
 import torch.nn.functional as F
@@ -47,33 +44,27 @@ class Voice_DB:
             json.dump(self.embeds, f, ensure_ascii=False, indent=2)
 
 
-    def add_all(self, path="data/known_voices"):
+    def add_all(self, path="data/known_voices/Unkown"):
         classifier = EncoderClassifier.from_hparams(
             source="speechbrain/spkrec-ecapa-voxceleb"
         )
 
-        user_embeds = [] # TODO reorder this
-        for dir in os.listdir(path):
-            directory = os.listdir(path + "/" + dir)
-            directory.sort()
-            for file in directory:
-                voice_sample_path = path + "/" + dir + "/" + file # step 1, generate embedding per user sample
-                print(f"Loading from {voice_sample_path}")
-                signal, fs = torchaudio.load(voice_sample_path)
+        user_embeds = []
+        directory = os.listdir(path)
+        directory.sort()
+        for file in directory:
+            voice_sample_path = path + "/" + file # step 1, generate embedding per user sample
+            print(f"Loading from {voice_sample_path}")
+            signal, fs = torchaudio.load(voice_sample_path)
+            embedding = classifier.encode_batch(signal)
+            # print(embedding)
+            user_embeds.append(embedding)
 
-                embedding = classifier.encode_batch(signal)
-                # print(embedding)
-                user_embeds.append(embedding)
-
-
-            final_embed = torch.stack(user_embeds, dim=0).mean(dim=0)
-            # final_embed = np.mean(np.stack(user_embeds_np, axis=0), axis=0)
-            self.embeds.append({"embed": final_embed.tolist(), "speaker": dir})
-            print(f"generated embeddings for user: {dir}")
-
+        final_embed = torch.stack(user_embeds, dim=0).mean(dim=0)
+        # final_embed = np.mean(np.stack(user_embeds_np, axis=0), axis=0)
+        self.embeds.append({"embed": final_embed.tolist(), "speaker": Path(path).name})
+        print(f"generated embeddings for user: {Path(path).name}")
         self._save()
-        print("generated all embeddings")
-
 
 
     def find_speaker(self, audio: bytes):
@@ -134,10 +125,10 @@ class Voice_DB:
             self.add_all(path=f"data/known_voices/{username}")
 
 
-
 if __name__ == "__main__":
-    # vdb = Voice_DB()
-    # vdb.add_all()
+    vdb = Voice_DB()
+    # vdb.collect_voices("Ayaan", 10, gen_embeds=True)
+    # vdb.add_all("data/known_voices/Ayaan")
 
     audio = record_until_silence()  # seconds
     voice_db = Voice_DB()
