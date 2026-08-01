@@ -4,6 +4,8 @@ import torch
 
 import torchaudio
 import torch.nn.functional as F
+from scipy.spatial.distance import cdist
+from sklearn.svm import SVC
 from speechbrain.inference.speaker import EncoderClassifier
 
 import numpy as np
@@ -44,7 +46,7 @@ class Voice_DB:
             json.dump(self.embeds, f, ensure_ascii=False, indent=2)
 
 
-    def add_all(self, path="data/known_voices/Unkown"):
+    def add_all(self, path="data/known_voices/MISC"):
         classifier = EncoderClassifier.from_hparams(
             source="speechbrain/spkrec-ecapa-voxceleb"
         )
@@ -61,7 +63,6 @@ class Voice_DB:
             user_embeds.append(embedding)
 
         final_embed = torch.stack(user_embeds, dim=0).mean(dim=0)
-        # final_embed = np.mean(np.stack(user_embeds_np, axis=0), axis=0)
         self.embeds.append({"embed": final_embed.tolist(), "speaker": Path(path).name})
         print(f"generated embeddings for user: {Path(path).name}")
         self._save()
@@ -78,7 +79,7 @@ class Voice_DB:
         wave_tensor = torch.from_numpy(wave_array).float() # convert from numpy
 
         classifier = EncoderClassifier.from_hparams(
-            source="speechbrain/spkrec-ecapa-voxceleb"
+            source="speechbrain/spkrec-ecapa-voxceleb" #ECAPA-TDNN based encoder
         )
         embedding = classifier.encode_batch(wave_tensor).squeeze()
 
@@ -87,8 +88,8 @@ class Voice_DB:
             saved = torch.as_tensor(user["embed"], dtype=torch.float32).squeeze()
             current = torch.as_tensor(embedding, dtype=torch.float32).squeeze()
             score = F.cosine_similarity(saved, current, dim=0).item()
-
             print(f"Score: {score}")
+
             if score >= self.comparison_threshold:
                 return user["speaker"]
         return None
@@ -101,7 +102,7 @@ class Voice_DB:
     #     # these are pre sorted now
     #
     #     # Train a Linear SVM with probability outputs enabled
-    #     clf = SVC(kernel='linear', probability=True)
+    #     clf = SVC(kernel='rbf', C=1.0)
     #     clf.fit(X_train, y_train)
     #
     #     # Test a completely new embedding vector

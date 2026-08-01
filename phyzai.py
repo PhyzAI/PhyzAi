@@ -107,7 +107,7 @@ def audio_recorder_loop():
 
                 audio = record_until_silence(timeout=20)  # seconds
                 voice_db = Voice_DB()
-                print(voice_db.find_speaker(audio)) # print the speaker
+                # speaker = voice_db.find_speaker(audio)
                 
                 audio_queue.put(audio)
 
