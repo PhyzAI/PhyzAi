@@ -12,14 +12,7 @@ MEMORY_DURATION = 120       # Amount of time to remember
 load_dotenv()
 
 # Load OpenAI client (replace with your actual key or use .env file)
-# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "sk-your-api-key")
-endpoint = "https://models.github.ai/inference"
-model_name = "openai/gpt-4o"
-
-client = OpenAI(
-    base_url=endpoint,
-    api_key=os.getenv("OPENAI_API_KEY"),
-)
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "sk-your-api-key")
 
 
 

@@ -8,7 +8,6 @@ import json
 import os
 
 from sklearn import svm
-
 import memory_db
 from transcriber import record_until_silence
 from sklearn.svm import SVC
@@ -73,7 +72,6 @@ class Voice_DB:
             print(f"generated embeddings for user: {dir}")
         self._save()
         print("generated all embeddings")
-
 
 
     def find_speaker(self, audio: bytes):
