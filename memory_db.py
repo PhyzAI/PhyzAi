@@ -122,7 +122,7 @@ class MemoryDB:
 
         for entry in self.memories:
             score = self._cosine_similarity(embedding, entry.get("embedding", []))
-            print(f"{entry['text']}\n{score}\n\n")
+            # print(f"{entry['text']}\n{score}\n\n")
 
             if score >= accepted_similarity:
                 return True

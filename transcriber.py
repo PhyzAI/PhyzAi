@@ -37,8 +37,13 @@ audio captured so far (which may be empty) is returned.
 
     frequency = random.randint(400, 1000) # Set Frequency
     duration = 300 # Set Duration To 1000 ms == 1 second
-    # winsound.Beep(frequency, duration)
-    os.system('afplay /System/Library/Sounds/Glass.aiff')
+
+    if os.environ.get("COMPUTERNAME") == "PHYZ":
+        import winsound
+        winsound.Beep(frequency, duration)
+    elif os.environ.get("COMPUTERNAME") == "AYAANMAC":
+        os.system('afplay /System/Library/Sounds/Glass.aiff')
+
     stream = sd.InputStream(samplerate=sample_rate, channels=1, dtype='int16')
     start_time = time.time()
 

@@ -53,6 +53,7 @@ def ask_chatgpt(system_prompt, user_prompt, memory_context=None):
     })
 
     try:
+        print(f"Message: {messages}")
         response = client.chat.completions.create(
             messages=messages,
             model="gpt-4o",

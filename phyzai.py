@@ -8,7 +8,6 @@ from concurrent.futures import ThreadPoolExecutor
 import queue
 import random
 from scipy.io import wavfile
-# import winsound# make beeping noises
 import os
 
 from sympy.physics.quantum.gate import normalized
@@ -46,6 +45,7 @@ try:
         serialObj = serial.Serial('COM3', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
     else:
         serialObj = serial.Serial('COM4', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
+
     serialObj.write(LOW_COMMAND)
     serialObj.flush()
     time.sleep(1)
@@ -101,9 +101,15 @@ def audio_recorder_loop():
                 frequency = random.randint(400, 1000) # Set Frequency
                 duration = 300 # Set Duration To 1000 ms == 1 second
                 
-                # winsound.Beep(frequency, duration)
-                os.system('afplay /System/Library/Sounds/Glass.aiff')
-                #winsound.PlaySound('SystemAsterisk', winsound.SND_ALIAS)
+
+
+                if os.environ.get("COMPUTERNAME") == "PHYZ":
+                    import winsound
+                    winsound.Beep(frequency, duration)
+                    winsound.PlaySound('SystemAsterisk', winsound.SND_ALIAS)
+                elif os.environ.get("COMPUTERNAME") == "AYAANMAC":
+                    os.system('afplay /System/Library/Sounds/Glass.aiff')
+
 
                 audio = record_until_silence(timeout=20)  # seconds
                 audio_queue.put(audio)
@@ -207,7 +213,7 @@ def main():
         speaker = voice_db.find_speaker(audio_bytes)
 
         transcription = transcribe_audio(model, audio_bytes)
-        
+
         if speaker != "Unknown User": transcription = f"{speaker} said: {transcription}" # add who is speaking to the transcription
         rp(f"[cyan][bold]{speaker} said:[/] {transcription}[/]")
         normalized = transcription.lower().strip().strip(".!?")
@@ -303,13 +309,16 @@ def main():
 
         with open("names2know.txt", "r") as nameFile:
             for name in nameFile.readlines():
-                if f"I am {name.strip().lower()}" in normalized or f"This is {name.strip().lower()}" in normalized:
+                if f"I am {name.strip().lower()}" in normalized or f"This is {name.strip().lower()}" in normalized: # TODO: associate with voice, whenever it changes, wipe this
+                    # TODO have a json file to keep track of who is seen and who isn't
                     with open("seen_mentors.txt", "a+", encoding="utf-8") as f:  # read and append mode
                         f.seek(0) #start at beginning of file
                         contents = f.read()
-                        if name.strip().lower() not in contents:
+                        if name.strip().lower() not in contents or speaker.strip().lower() not in contents and speaker != "Unknown User": # also add current speaker if not already in the list
                             f.write(f"{name.strip().lower()}\n")
                             print(f"added {name.strip().lower()} to seen mentors file")
+
+
 
         # Respond with Chat if Phyz is mentioned
         if any(word in normalized for word in trigger_words):
