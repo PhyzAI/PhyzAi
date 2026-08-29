@@ -29,6 +29,8 @@ def speak(text: str):
                 f.write("speaking")
                 #print("Bahadir Debug actually speaking")
 
+
+
     engine.say(text)
     engine.runAndWait()
     open("speak_status.txt", "w", encoding="utf-8").close()

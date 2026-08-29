@@ -31,12 +31,14 @@ def should_remember(prompt: str, memory: MemoryDB) -> bool:
     # If Phyz knows who they are talking to, remember the data under that user's name, if not, remember under the "guest" username
     # Can use vision/face recognition to identify faces
 
-    exists = memory.does_memory_exist(prompt, accepted_similarity=0.6)
-    if exists: return False
+    # exists = memory.does_memory_exist(prompt, accepted_similarity=0.6)
+    # print(f"Memory related to {prompt} already exists: {exists}")
+    # if exists: return False
 
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "sk-your-api-key")
 
     if any(word in prompt for word in remembering_keywords): #if they don't pass this, then pass it to the slm
+        print("Trying the manual filter")
         return True
 
     messages = [{'role': 'system', 'content': sysprompt}, {'role': 'user', 'content': f"\"{prompt}\""}]
@@ -116,4 +118,5 @@ def should_remember(prompt: str, memory: MemoryDB) -> bool:
 #     # return False #unsure verdict
 
 if __name__ == "__main__":
-    print(should_remember("Ayaan remembers that his cats name was Mira"))
+    memory = MemoryDB()
+    print(should_remember("Ayaan said: I like the color green", memory))

@@ -72,6 +72,12 @@ last_assistant_response: str | None = None
 #System Prompt Definition
 SYSTEM_PROMPT = prompt
 
+def init_files(): #init any files to specific states when you start up phyz
+    # as of 8/29 being used just to reset the state of speak_status.txt to be blank on start
+    with open("speak_status.txt", "w", encoding="utf-8") as f:
+        f.write("")
+
+
 def augment_prompt_with_mentors(base_prompt, mentor_file="seen_mentors.txt"):
     try:
         with open(mentor_file, "r", encoding="utf-8") as f:
@@ -87,7 +93,7 @@ def augment_prompt_with_mentors(base_prompt, mentor_file="seen_mentors.txt"):
 def audio_recorder_loop():
     with open("speak_status.txt", "r") as f:
         status = f.read().strip().lower()
-        while True and status != "speaking":
+        while True and status != "speaking": #TODO the status doesn't reset if you kill the program mid speech, should be force reset
             currentSerial = ''
             #ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]  # 14:30:22.123
             #print(f"[{ts}] BAHADIR - this is OUTSIDE the if statement")
@@ -135,6 +141,7 @@ def play_wav(raw: bytes):
 
 
 def main():
+    init_files()
     model = whisper.load_model("base")  # Load Whisper model once
     dad_jokes = DadJokes()  # Load jokes once
     apologies = Apologies()  # Load apologies once
@@ -214,7 +221,6 @@ def main():
 
         transcription = transcribe_audio(model, audio_bytes)
 
-        if speaker != "Unknown User": transcription = f"{speaker} said: {transcription}" # add who is speaking to the transcription
         rp(f"[cyan][bold]{speaker} said:[/] {transcription}[/]")
         normalized = transcription.lower().strip().strip(".!?")
 
@@ -331,8 +337,15 @@ def main():
             # Add relevant memories to the prompt before calling the LLM
             memory_context = None
             memories = memory_db.query(transcription, top_k=5)
-            if memories:
-                memory_context = "\n".join(f"- {m['text']}" for m in memories)
+            if memories: #adds the speaker context to the memories as well
+                memory_context = ""
+                for m in memories:
+                    try:
+                        speaker = m["metadata"]["speaker"]
+                        memory_context += (f"- {speaker} said {m['text']}")
+                    except (KeyError, TypeError) as e:  # excepting in case the metadata doesn't exist or is None
+                        memory_context += (f"- {m['text']}")
+                    memory_context += "\n"
 
             llm_choice = "chatgpt"
             try:
@@ -348,19 +361,22 @@ def main():
             else:
                 response = ask_chatgpt(enhanced_prompt, transcription, memory_context=memory_context)
 
-                # with ThreadPoolExecutor() as executor:
-                #     future = executor.submit(should_remember, transcription, memory_db) #passes in memory and transcription
-                #     result = future.result()
+                with ThreadPoolExecutor() as executor:
+                    future = executor.submit(should_remember, transcription, memory_db) #passes in memory and transcription
+                    result = future.result()
 
-                result = should_remember(transcription, memory_db)
+                # result = should_remember(transcription, memory_db) # without the second thread, can toggle off & on for testing
 
                 if result:
-                    to_remember = f"Q: {transcription}\nA: {response}" # I don't think we need to store the answer but we can for this example
-                    with open("seen_mentors.txt", "r", encoding="utf-8") as f:
-                        metadata = None
-                        line = f.readlines()
-                        if line is not None:
-                            metadata = {"speaker": line}  # just throwing whoever is seen onto the speaker metadata
+                    to_remember = f"Q: {transcription}\nA: {response}" # I don't think we need to store the answer as apart of what we remember but we can for this example
+                    if speaker != "Unknown User": metadata = {"speaker": speaker} #first try to assign speaker from the voice
+                    else:
+                        #then try from whoever is being seen
+                        with open("seen_mentors.txt", "r", encoding="utf-8") as f:
+                            metadata = ""
+                            line = f.readlines()
+                            if line is not None:
+                                metadata = {"speaker": line}  # just throwing whoever is seen onto the speaker metadata
 
                     memory_db.add_memory(to_remember, metadata=metadata)
 

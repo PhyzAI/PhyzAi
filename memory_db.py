@@ -136,7 +136,7 @@ class MemoryDB:
 
         return False
 
-    def write_memories(self):
+    def list_memories(self):
         """just print out the memory text"""
         for entry in self.memories:
             print(entry["text"])
@@ -144,8 +144,8 @@ class MemoryDB:
 
 if __name__ == "__main__":
     db = MemoryDB()
-    # db.write_memories()
-    print(db.does_memory_exist("What is LeAnn's dog's name?", accepted_similarity=0.6))
+    # db.list_memories()
+    # print(db.does_memory_exist("What is LeAnn's dog's name?", accepted_similarity=0.6))
     # print(db.does_memory_exist("Does Bahadir enjoy math?"))
     # print(db.query("Does Bahadir enjoy math?"))
     # print(db.query("Does Bahadir like math?"))
@@ -155,5 +155,28 @@ if __name__ == "__main__":
     # print(db.query("I really love math, its my favorite subject!"))
     # print(db.does_memory_exist("In his free time, Bahadir enjoys puzzles and physics"))
 
-    print(db.query("How did Keith contribute to Phyz?", top_k=3))
+    # print(db.does_memory_exist("Ayaan said: I like the color green", accepted_similarity=0.6))
+    # print(db.query("How did Keith contribute to Phyz?", top_k=3))
     # Structured testing
+
+
+    #misc tests
+    memories = db.query("Hi Fizz. Fizz, what's my favorite color?", top_k=5)
+    # print(memories[0]["metadata"]["speaker"])
+    # print(memories)
+    if memories:
+        memory_context = ""
+        for m in memories:
+            try:
+                # print(m)
+                speaker = m["metadata"]["speaker"]
+                memory_context += (f"- {speaker} said {m['text']}")
+            except (KeyError, TypeError) as e: #excepting in case the metadata doesn't exist or is None
+                memory_context += (f"- {m['text']}")
+            memory_context += "\n"
+
+        # try:
+        #     memory_context = "\n".join(f"- {m['metadata']['speaker']} said:  {m['text']}" for m in memories)
+        # except KeyError:
+        #     memory_context = "\n".join(f"- {m['text']}" for m in memories)
+        print(memory_context)
