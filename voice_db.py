@@ -4,20 +4,13 @@ import torch
 
 import torchaudio
 import torch.nn.functional as F
-from scipy.spatial.distance import cdist
-from sklearn.svm import SVC
 from speechbrain.inference.speaker import EncoderClassifier
 
 import numpy as np
 import json
 import os
 
-# from sklearn import svm
-
-import memory_db
 from transcriber import record_until_silence, save_wav
-# from sklearn.svm import SVC
-
 
 
 #RUNS INDEPENDENT OF PHYZ
@@ -102,6 +95,10 @@ class Voice_DB:
         return "Unknown User"
 
     def collect_voices(self, username, training_count, gen_embeds=False): # its best to collect voices using different mics, and different angles - see voice_training.txt for training lines
+        """
+        This method will collect voice samples for a given user (see prompts in data/voice_training.txt).
+        You can specify how many pieces of training data you want, and if you want to generate and then save the embeddings for that as well
+        """
         for i in range(training_count):  # x voice samples
             print(f"Recording for sample {i}")
             audio = record_until_silence()
@@ -118,7 +115,7 @@ class Voice_DB:
 
 if __name__ == "__main__":
     vdb = Voice_DB()
-    # vdb.collect_voices("Bahadir", 10, gen_embeds=True)
+    vdb.collect_voices("Ayaan", 10, gen_embeds=True)
     # vdb.add_all("data/known_voices/Ayaan")
 
     audio = record_until_silence()  # seconds

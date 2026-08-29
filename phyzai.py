@@ -348,9 +348,11 @@ def main():
             else:
                 response = ask_chatgpt(enhanced_prompt, transcription, memory_context=memory_context)
 
-                with ThreadPoolExecutor() as executor:
-                    future = executor.submit(should_remember, transcription)
-                    result = future.result()
+                # with ThreadPoolExecutor() as executor:
+                #     future = executor.submit(should_remember, transcription, memory_db) #passes in memory and transcription
+                #     result = future.result()
+
+                result = should_remember(transcription, memory_db)
 
                 if result:
                     to_remember = f"Q: {transcription}\nA: {response}" # I don't think we need to store the answer but we can for this example

@@ -4,6 +4,8 @@ import time
 
 from flask.cli import load_dotenv
 from openai import OpenAI
+from torch.distributed._shard.sharding_spec.chunk_sharding_spec_ops import embedding
+
 load_dotenv()
 
 class MemoryDB:
@@ -111,7 +113,11 @@ class MemoryDB:
         return top
 
     def does_memory_exist(self, query_text: str, accepted_similarity: float = 0.95) -> bool:
-        """Try to find if a similar memory is already existing in the database"""
+        """
+        Try to find if a similar memory is already existing in the database
+        Comparing the embeddings of the query with that of the memories to match a similarity
+        """
+
         if not self.memories:
             return False
 
@@ -119,6 +125,7 @@ class MemoryDB:
             model=self.embedding_model,
             input=query_text,
         ).data[0].embedding
+
 
         for entry in self.memories:
             score = self._cosine_similarity(embedding, entry.get("embedding", []))

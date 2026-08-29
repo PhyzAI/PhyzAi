@@ -13,15 +13,25 @@ with open("slm_prompt.txt", "r") as f: #tips for prompt: give examples, keep it 
     sysprompt += f.read()
 remembering_keywords = ["I like", "I want", "I have", "My favorite", "I am"] #simple manual filter for basic questions
 
-def should_remember(prompt: str) -> bool:
+def should_remember(prompt: str, memory: MemoryDB) -> bool:
+    print("Evaluating if Phyz should remember")
+    """"
+    We did some work with the SLMs and found them to not be too reliable, so the code is commented below.
+    The functioning code here works like this. Everytime Phyz is asked a question, this runs in a new thread, querrying should it remember?
+    1st, Phyz checks does a related memory already exist? Generating embeddings and checking the cosine similarity of the text against phyz's database (will be hard to traverse as phyz gains more memories)
+    2nd, We manually check if there are any immediate keywords used that could indicate to phyz its worth remembering
+    3rd, The llm takes a system prompt and the user prompt to evaluate whether it should remember
+
+    returns true or false for if it should remember
+    """
+
     # Factors to consider: is the information in the prompt something that can be searched on the internet?, also, do I already know this?
     # Does the statement contain the word "I" in it (I have, I like, I want, etc.)
     # Do I know who I am currently talking to?
     # If Phyz knows who they are talking to, remember the data under that user's name, if not, remember under the "guest" username
     # Can use vision/face recognition to identify faces
 
-    memory_db = MemoryDB()
-    exists = memory_db.does_memory_exist(prompt, accepted_similarity=0.6)
+    exists = memory.does_memory_exist(prompt, accepted_similarity=0.6)
     if exists: return False
 
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "sk-your-api-key")
