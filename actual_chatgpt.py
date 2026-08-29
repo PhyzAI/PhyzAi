@@ -5,6 +5,8 @@ import time
 from dotenv import load_dotenv
 from openai import OpenAI
 import actual_SLM
+from debug_config import DEBUG
+
 conversation_history = []  # Global or persistent in-session
 MEMORY_DURATION = 120       # Amount of time to remember
 
@@ -53,7 +55,7 @@ def ask_chatgpt(system_prompt, user_prompt, memory_context=None):
     })
 
     try:
-        print(f"Message: {messages}")
+        if DEBUG.SUPER_VERBOSE: print(f"Message: {messages}")
         response = client.chat.completions.create(
             messages=messages,
             model="gpt-4o",

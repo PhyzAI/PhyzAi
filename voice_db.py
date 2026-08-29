@@ -10,6 +10,7 @@ import numpy as np
 import json
 import os
 
+from debug_config import DEBUG
 from transcriber import record_until_silence, save_wav
 
 
@@ -87,9 +88,11 @@ class Voice_DB:
             #Checks Bahadir first and then the rest of the priority then everyone else
             saved = torch.as_tensor(user["embed"], dtype=torch.float32).squeeze()
             score = F.cosine_similarity(saved, current, dim=0).item()
-            print(f"Attempted Detection: Score {score}, User {user['speaker']}")
+            if DEBUG.DEBUG_MODE:
+                print(f"Attempted Detection: Score {score}, User {user['speaker']}")
             if score >= self.comparison_threshold:
-                print(f"User: {user['speaker']} Score: {score}")
+                if DEBUG.DEBUG_MODE:
+                    print(f"User: {user['speaker']} Score: {score}")
                 return user["speaker"]
 
         return "Unknown User"

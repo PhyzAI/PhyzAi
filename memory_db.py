@@ -6,6 +6,8 @@ from flask.cli import load_dotenv
 from openai import OpenAI
 from torch.distributed._shard.sharding_spec.chunk_sharding_spec_ops import embedding
 
+from debug_config import DEBUG
+
 load_dotenv()
 
 class MemoryDB:
@@ -48,7 +50,7 @@ class MemoryDB:
 
     def add_memory(self, text: str, metadata: dict | None = None) -> str:
         """Store a new memory item (text + embedding) and persist to disk."""
-        print("Adding data to memory")
+        if DEBUG.DEBUG_MODE: print("Adding data to memory")
         # Ensure we only store non-empty strings
         if not text or not text.strip():
             raise ValueError("Memory text must be a non-empty string")

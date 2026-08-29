@@ -54,7 +54,7 @@ audio captured so far (which may be empty) is returned.
         while True:
             # check timeout at top of loop so we don't hang forever
             if timeout is not None and (time.time() - start_time) > timeout:
-                print("Timeout reached, returning audio captured so far.")
+                print(", returning audio captured so far.")
                 break
 
             try:

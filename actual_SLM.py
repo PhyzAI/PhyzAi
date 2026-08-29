@@ -3,6 +3,7 @@ from ollama import chat
 import os
 
 from openai import OpenAI
+from debug_config import DEBUG
 
 load_dotenv()
 from memory_db import MemoryDB
@@ -14,7 +15,7 @@ with open("slm_prompt.txt", "r") as f: #tips for prompt: give examples, keep it 
 remembering_keywords = ["i like", "i want", "i have", "my favorite", "i am"] #simple manual filter for basic questions
 
 def should_remember(prompt: str, memory: MemoryDB) -> bool:
-    print("Evaluating if Phyz should remember")
+    if DEBUG.DEBUG_MODE: print("Evaluating if Phyz should remember")
     """"
     We did some work with the SLMs and found them to not be too reliable, so the code is commented below.
     The functioning code here works like this. Everytime Phyz is asked a question, this runs in a new thread, querrying should it remember?
@@ -32,13 +33,13 @@ def should_remember(prompt: str, memory: MemoryDB) -> bool:
     # Can use vision/face recognition to identify faces
 
     exists = memory.does_memory_exist(prompt, accepted_similarity=0.6)
-    print(f"Memory related to {prompt} already exists: {exists}")
+    if DEBUG.DEBUG_MODE: print(f"Memory related to {prompt} already exists: {exists}")
     if exists: return False
 
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "sk-your-api-key")
 
     if any(word in prompt.lower() for word in remembering_keywords): #if they don't pass this, then pass it to the slm
-        print("Trying the manual filter")
+        if DEBUG.DEBUG_MODE: print("Trying the manual filter")
         return True
 
     messages = [{'role': 'system', 'content': sysprompt}, {'role': 'user', 'content': f"\"{prompt}\""}]
@@ -49,7 +50,7 @@ def should_remember(prompt: str, memory: MemoryDB) -> bool:
         temperature=0.7,
     )
 
-    print(f"gpt-4o: {prompt} @ {0.7}: {response3.choices[0].message.content}")
+    if DEBUG.DEBUG_MODE: print(f"gpt-4o: {prompt} @ {0.7}: {response3.choices[0].message.content}")
     llm3 = "yes" in response3.choices[0].message.content.lower()
     return llm3
 
