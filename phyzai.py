@@ -73,8 +73,11 @@ last_assistant_response: str | None = None
 SYSTEM_PROMPT = prompt
 
 def init_files(): #init any files to specific states when you start up phyz
-    # as of 8/29 being used just to reset the state of speak_status.txt to be blank on start
+    # as of 8/29 being used just to reset the state of speak_status.txt and transcribe_status.txt to be blank on start
     with open("speak_status.txt", "w", encoding="utf-8") as f:
+        f.write("")
+
+    with open("transcribe_status.txt", "w", encoding="utf-8") as f:
         f.write("")
 
 
@@ -341,8 +344,8 @@ def main():
                 memory_context = ""
                 for m in memories:
                     try:
-                        speaker = m["metadata"]["speaker"]
-                        memory_context += (f"- {speaker} said {m['text']}")
+                        s = m["metadata"]["speaker"]
+                        memory_context += (f"- {s} said {m['text']}")
                     except (KeyError, TypeError) as e:  # excepting in case the metadata doesn't exist or is None
                         memory_context += (f"- {m['text']}")
                     memory_context += "\n"
@@ -359,10 +362,11 @@ def main():
             elif llm_choice == "claude":
                 response = ask_claude(enhanced_prompt, transcription, memory_context=memory_context)
             else:
-                response = ask_chatgpt(enhanced_prompt, transcription, memory_context=memory_context)
+                transcription_w_speaker = f"{speaker} said: {transcription}"
+                response = ask_chatgpt(enhanced_prompt, transcription_w_speaker, memory_context=memory_context)
 
                 with ThreadPoolExecutor() as executor:
-                    future = executor.submit(should_remember, transcription, memory_db) #passes in memory and transcription
+                    future = executor.submit(should_remember, transcription_w_speaker, memory_db) #passes in memory and transcription
                     result = future.result()
 
                 # result = should_remember(transcription, memory_db) # without the second thread, can toggle off & on for testing

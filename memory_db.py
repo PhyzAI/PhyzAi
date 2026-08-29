@@ -144,6 +144,7 @@ class MemoryDB:
 
 if __name__ == "__main__":
     db = MemoryDB()
+    print(db.does_memory_exist("Hi Fizz, do you know that I really like robots? Fizz, can you identify who's speaking right now?", accepted_similarity=0.6))
     # db.list_memories()
     # print(db.does_memory_exist("What is LeAnn's dog's name?", accepted_similarity=0.6))
     # print(db.does_memory_exist("Does Bahadir enjoy math?"))
@@ -161,22 +162,22 @@ if __name__ == "__main__":
 
 
     #misc tests
-    memories = db.query("Hi Fizz. Fizz, what's my favorite color?", top_k=5)
+    # memories = db.query("Hi Fizz. Fizz, what's my favorite color?", top_k=5)
     # print(memories[0]["metadata"]["speaker"])
     # print(memories)
-    if memories:
-        memory_context = ""
-        for m in memories:
-            try:
-                # print(m)
-                speaker = m["metadata"]["speaker"]
-                memory_context += (f"- {speaker} said {m['text']}")
-            except (KeyError, TypeError) as e: #excepting in case the metadata doesn't exist or is None
-                memory_context += (f"- {m['text']}")
-            memory_context += "\n"
+    # if memories:
+    #     memory_context = ""
+    #     for m in memories:
+    #         try:
+    #             # print(m)
+    #             speaker = m["metadata"]["speaker"]
+    #             memory_context += (f"- {speaker} said {m['text']}")
+    #         except (KeyError, TypeError) as e: #excepting in case the metadata doesn't exist or is None
+    #             memory_context += (f"- {m['text']}")
+    #         memory_context += "\n"
 
         # try:
         #     memory_context = "\n".join(f"- {m['metadata']['speaker']} said:  {m['text']}" for m in memories)
         # except KeyError:
         #     memory_context = "\n".join(f"- {m['text']}" for m in memories)
-        print(memory_context)
+        # print(memory_context)

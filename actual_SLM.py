@@ -11,7 +11,7 @@ from memory_db import MemoryDB
 sysprompt = ""
 with open("slm_prompt.txt", "r") as f: #tips for prompt: give examples, keep it simple, and only yes/no answers
     sysprompt += f.read()
-remembering_keywords = ["I like", "I want", "I have", "My favorite", "I am"] #simple manual filter for basic questions
+remembering_keywords = ["i like", "i want", "i have", "my favorite", "i am"] #simple manual filter for basic questions
 
 def should_remember(prompt: str, memory: MemoryDB) -> bool:
     print("Evaluating if Phyz should remember")
@@ -31,13 +31,13 @@ def should_remember(prompt: str, memory: MemoryDB) -> bool:
     # If Phyz knows who they are talking to, remember the data under that user's name, if not, remember under the "guest" username
     # Can use vision/face recognition to identify faces
 
-    # exists = memory.does_memory_exist(prompt, accepted_similarity=0.6)
-    # print(f"Memory related to {prompt} already exists: {exists}")
-    # if exists: return False
+    exists = memory.does_memory_exist(prompt, accepted_similarity=0.6)
+    print(f"Memory related to {prompt} already exists: {exists}")
+    if exists: return False
 
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or "sk-your-api-key")
 
-    if any(word in prompt for word in remembering_keywords): #if they don't pass this, then pass it to the slm
+    if any(word in prompt.lower() for word in remembering_keywords): #if they don't pass this, then pass it to the slm
         print("Trying the manual filter")
         return True
 
