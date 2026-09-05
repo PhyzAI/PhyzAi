@@ -13,3 +13,5 @@ Flask
 BeautifulSoup4
 pyserial
 TTS
+speechbrain
+setuptools<=81.0.0

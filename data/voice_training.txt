@@ -1,0 +1,24 @@
+# Below are 20 lines to be repeated in different tones for voice training. Each clip is 3-5 seconds, please speak after you hear the tone beep
+
+
+1. Calm: "The morning light feels quiet and warm."
+2. Happy: "That was a great idea, let’s try it."
+3. Curious: "Wait, how exactly does that work?"
+4. Confident: "I know we can figure this out."
+5. Surprised: "Oh wow, I did not expect that."
+6. Thoughtful: "Let me think about that for a second."
+7. Excited: "This is actually starting to make sense!"
+8. Serious: "Please listen carefully to what I am saying."
+9. Relaxed: "Everything is fine, we have plenty of time."
+10. Questioning: "Are you sure this is the right answer?"
+
+11. Quiet/soft: "I am speaking softly but clearly now."
+12. Faster pace: "Let’s move quickly before the timer runs out."
+13. Slower pace: "I will say this slowly and clearly."
+14. Slightly annoyed: "That is not quite what I meant."
+15. Friendly: "Hey, it is good to see you again."
+16. Explaining: "First we check the input, then the output."
+17. Storytelling: "Yesterday I walked outside and heard the rain."
+18. Low energy: "I am a little tired, but I am still here."
+19. High energy: "Come on, this is going to be awesome!"
+20. Neutral: "The blue notebook is sitting on the table."

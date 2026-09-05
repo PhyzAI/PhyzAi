@@ -4,15 +4,20 @@ import sounddevice as sd
 import whisper
 import time
 import threading
+from concurrent.futures import ThreadPoolExecutor
 import queue
 import random
 from scipy.io import wavfile
-import winsound # make beeping noises
 import os
 
+from sympy.parsing.sym_expr import cin
+from sympy.physics.quantum.gate import normalized
+
 import remote_control
+from actual_SLM import should_remember
 from apologies import Apologies
 from dadjokes import DadJokes
+from debug_config import DEBUG
 from thinkingLines import ThinkingLines
 from actual_chatgpt import ask_chatgpt
 from actual_gemini import ask_gemini
@@ -30,6 +35,7 @@ from rich import print as rp
 import serial
 from datetime import datetime
 
+from voice_db import Voice_DB
 
 # Init communication with Arduino (optional: runs without serial if COM4 unavailable)
 LOW_COMMAND = bytes('l', "utf-8")
@@ -41,6 +47,7 @@ try:
         serialObj = serial.Serial('COM3', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
     else:
         serialObj = serial.Serial('COM4', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
+
     serialObj.write(LOW_COMMAND)
     serialObj.flush()
     time.sleep(1)
@@ -66,6 +73,21 @@ last_assistant_response: str | None = None
 
 #System Prompt Definition
 SYSTEM_PROMPT = prompt
+
+def init_files(): #init any files to specific states when you start up phyz
+    # as of 8/29 being used just to reset the state of speak_status.txt, transcribe_status.txt, and seen/spoken_to_mentors.txt to be blank on start
+    with open("speak_status.txt", "w", encoding="utf-8") as f:
+        f.write("")
+
+    with open("transcribe_status.txt", "w", encoding="utf-8") as f:
+        f.write("")
+
+    with open("spoken_to_mentors.txt", "w", encoding="utf-8") as f:
+        f.write("")
+
+    with open("seen_mentors.txt", "w", encoding="utf-8") as f:
+        f.write("")
+
 
 def augment_prompt_with_mentors(base_prompt, mentor_file="seen_mentors.txt"):
     try:
@@ -95,11 +117,18 @@ def audio_recorder_loop():
             if (listeningmode == True) or (currentSerial == '4'):
                 frequency = random.randint(400, 1000) # Set Frequency
                 duration = 300 # Set Duration To 1000 ms == 1 second
-                winsound.Beep(frequency, duration)
-                #winsound.PlaySound('SystemAsterisk', winsound.SND_ALIAS)
+                
+
+
+                if os.getenv("COMPUTERNAME") == "PHYZ":
+                    import winsound
+                    winsound.Beep(frequency, duration)
+                    winsound.PlaySound('SystemAsterisk', winsound.SND_ALIAS)
+                elif os.environ.get("COMPUTERNAME") == "AYAANMAC":
+                    os.system('afplay /System/Library/Sounds/Glass.aiff')
+
 
                 audio = record_until_silence(timeout=20)  # seconds
-
                 audio_queue.put(audio)
 
                 f.seek(0)
@@ -123,6 +152,7 @@ def play_wav(raw: bytes):
 
 
 def main():
+    init_files()
     model = whisper.load_model("base")  # Load Whisper model once
     dad_jokes = DadJokes()  # Load jokes once
     apologies = Apologies()  # Load apologies once
@@ -179,7 +209,7 @@ def main():
 
 
             response, last_idle_response_time = check_idle_and_prompt_chatgpt(
-                last_interaction_time, last_idle_response_time
+                last_interaction_time, last_idle_response_time, memory_db
             )
             if response:
                 print(f"PHYZAI (idle): {response}")
@@ -197,9 +227,12 @@ def main():
         #       if button not pressed and pressed flag is true then call record until silence       
         #(This allows us to not accidentally double call a method if the button is being held down)
 
-        transcription = transcribe_audio(model, audio_bytes)  
-        rp(f"[cyan][bold]You said:[/] {transcription}[/]")
+        voice_db = Voice_DB()
+        speaker = voice_db.find_speaker(audio_bytes)
 
+        transcription = transcribe_audio(model, audio_bytes)
+
+        rp(f"[cyan][bold]{speaker} said:[/] {transcription}[/]")
         normalized = transcription.lower().strip().strip(".!?")
 
         #############################################################
@@ -291,6 +324,25 @@ def main():
                 speak("I don't have anything to remember yet.")
             continue
 
+        with open("names2know.txt", "r") as nameFile: # Keep this updated please
+            for name in nameFile.readlines():
+                if f"I am {name.strip().lower()}" in normalized or f"This is {name.strip().lower()}" in normalized:
+                    # TODO have a json file to keep track of who is seen and who isn't
+                    with open("seen_mentors.txt", "a+", encoding="utf-8") as f:  # read and append mode
+                        f.seek(0) #start at beginning of file
+                        contents = f.read()
+                        if name.strip().lower() not in contents:
+                            f.write(f"{name.strip().lower()}\n")
+                            if DEBUG.DEBUG_MODE: print(f"added {name.strip().lower()} to seen mentors file")
+
+        #the speaker name has to be registered in names2know anyway, so we don't really need to check that here, its more for the database of users for vision
+        #TODO possibly could check the last speaker, and compare them so you only change the spoken mentors file if the speaker changes
+        if speaker.strip().lower() != "unknown user":
+            with open("spoken_to_mentors.txt", "w", encoding="utf-8") as f:  # read/write mode
+                    f.write(f"{speaker.strip().lower()}\n")
+                    if DEBUG.DEBUG_MODE: print(f"added {speaker.strip().lower()} to seen spoken mentors file")
+
+
         # Respond with Chat if Phyz is mentioned
         if any(word in normalized for word in trigger_words):
             # bahadir addition - three lines below
@@ -302,8 +354,15 @@ def main():
             # Add relevant memories to the prompt before calling the LLM
             memory_context = None
             memories = memory_db.query(transcription, top_k=5)
-            if memories:
-                memory_context = "\n".join(f"- {m['text']}" for m in memories)
+            if memories: #adds the speaker context to the memories as well
+                memory_context = ""
+                for m in memories:
+                    try:
+                        s = m["metadata"]["speaker"]
+                        memory_context += (f"- {s} said {m['text']}")
+                    except (KeyError, TypeError) as e:  # excepting in case the metadata doesn't exist or is None
+                        memory_context += (f"- {m['text']}")
+                    memory_context += "\n"
 
             llm_choice = "chatgpt"
             try:
@@ -317,7 +376,28 @@ def main():
             elif llm_choice == "claude":
                 response = ask_claude(enhanced_prompt, transcription, memory_context=memory_context)
             else:
-                response = ask_chatgpt(enhanced_prompt, transcription, memory_context=memory_context)
+                transcription_w_speaker = f"{speaker} said: {transcription}"
+                response = ask_chatgpt(enhanced_prompt, transcription_w_speaker, memory_context=memory_context)
+
+                with ThreadPoolExecutor() as executor:
+                    future = executor.submit(should_remember, transcription_w_speaker, memory_db) #passes in memory and transcription
+                    result = future.result()
+
+                # result = should_remember(transcription, memory_db) # without the second thread, can toggle off & on for testing
+
+                if result:
+                    to_remember = f"A: {response}" #TODO FIXED -  I don't think we need to store the answer as apart of what we remember but we can for this example
+                    if speaker != "Unknown User": metadata = {"speaker": speaker} #first try to assign speaker from the voice
+                    else:
+                        #then try from whoever is being seen
+                        with open("seen_mentors.txt", "r", encoding="utf-8") as f:
+                            metadata = ""
+                            line = f.readlines()
+                            if line is not None:
+                                metadata = {"speaker": line}  # just throwing whoever is seen onto the speaker metadata
+
+                    memory_db.add_memory(to_remember, metadata=metadata)
+
 
             if response:
                 last_interaction_time = time.time()
@@ -327,7 +407,7 @@ def main():
                 speak(response)
 
 
-        if (check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time))[0]:
+        if (check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time, memory_db))[0]:
             last_interaction_time = time.time()
 
 
