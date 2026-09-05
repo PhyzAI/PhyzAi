@@ -24,3 +24,6 @@ coqui_training/config.json
 coqui_training/train.txt
 coqui_training/val.txt
 coqui_training/dataset/wavs/audio1.mp3
+
+
+.DS_Store

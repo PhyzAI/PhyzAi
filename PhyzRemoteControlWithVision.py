@@ -33,11 +33,12 @@
 # Enable different basic operations
 
 HOME = False   # At Keith's house
-enable_GUI = False
-enable_MC = True # enable Motor Control
+CAMERA_INDEX = 1
+enable_GUI = True
+enable_MC = False # enable Motor Control
 enable_face_detect = True
-enable_face_recog = False
-enable_ball_detect=True
+enable_face_recog = True
+enable_ball_detect= False
 enable_show_phyz_loc = True
 enable_randomize_look = False # Look around a little bit for each face
 enable_face_camera = True # Look more straight ahead
@@ -57,10 +58,11 @@ HEAD_OFFSET_X = 0
 HEAD_OFFSET_Y = 0
 
 
-import pygame
+# import pygame
 import cv2 
 import numpy as np
-import face_recognition
+# AYAT CHANGE - file uses FaceNet instead of face_recognition
+# import face_recognition
 import time
 from facenet_pytorch import MTCNN
 
@@ -69,15 +71,28 @@ import glob
 import re
 import math
 
+# AYAT CHANGE - added below for FaceNet
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+KNOWN_FACES_DIR = os.path.join(BASE_DIR, "KnownFaces")
+transcribe_status_file = os.path.join(BASE_DIR, "transcribe_status.txt")
+# AYAT CHANGE - added above for FaceNet
 
 # Basic YOLO object detection
-import torch
-import cv2
-from ultralytics import YOLO  # Use YOLO from the Ultralytics library
+# AYAT CHANGE - changed unconditional torch import to conditional import based on enable_ball_detect
+model = None
+
+if enable_ball_detect:
+    import torch
+    from ultralytics import YOLO
+    model = YOLO("yolo11s.pt")
+
+# import torch
+# import cv2
+# from ultralytics import YOLO  # Use YOLO from the Ultralytics library
 # Load a pre-trained YOLO model
 # You can specify "yolov5s.pt" or "yolov8s.pt" (small model versions) or other model sizes for different performance
 #model = YOLO("yolov8n.pt")  # 'n' for nano model, fast and lightweight for real-time detection
-model = YOLO("yolo11s.pt")  # 'n' for nano model, fast and lightweight for real-time detection
+# model = YOLO("yolo11s.pt")  # 'n' for nano model, fast and lightweight for real-time detection
 #model = YOLO("/Volumes/Safari/PhyzAI_RemoteControl/runs/detect/train2/weights/best.pt")
 
 
@@ -113,7 +128,8 @@ arm_left_range = (944*4, 2000*4, 2000*4)
         
 
 # Load already seen mentors into a set
-seen_mentors_file = "seen_mentors.txt"
+# AYAT CHANGE - changed to use os.path.join to ensure cross-platform compatibility
+seen_mentors_file = os.path.join(BASE_DIR, "seen_mentors.txt")
 seen_mentors = set()
 
 try:
@@ -309,7 +325,7 @@ def generate_encodings_from_dir(directory):
     #face_names = []
     known_faces = []
     for file in os.listdir(directory):
-        if file.endswith(".jpg"):
+        if file.lower().endswith((".jpg", ".jpeg", ".png")):
             file_path = os.path.join(directory, file)
 
             #target_image = face_recognition.load_image_file(file_path)
@@ -323,13 +339,18 @@ def generate_encodings_from_dir(directory):
             this_face_encodings = embedder.extract(target_image, threshold=0.90) # face_region  
             if this_face_encodings:
                 this_face_encoding = this_face_encodings[0]['embedding']
+
+            # AYAT CHANGE - Use the filename (without extension) as the name for the known face
             # Use a regular expression to match the alphabetic part of the filename
-                match = re.match(r"([a-zA-Z]+)", file)      
-                if match:
-                    known_faces.append((match.group(1), this_face_encoding))
-                    #face_encodings.append(target_encoding)
-                else:
-                    assert False
+                # match = re.match(r"([a-zA-Z]+)", file)      
+                # if match:
+                #     known_faces.append((match.group(1), this_face_encoding))
+                #     #face_encodings.append(target_encoding)
+                # else:
+                #     assert False
+                name = os.path.splitext(file)[0]
+                known_faces.append((name, this_face_encoding))
+            # AYAT CHANGE ^^
     return known_faces
 
 #known_faces = generate_encodings_from_dir("./KnownFaces/")
@@ -411,7 +432,10 @@ def detect_ball(frame):
 
 def detect_faces(frame, max_faces = 5, PROB_THRESH = 0.90):
     face_list = []
-    boxes, probs = mtcnn.detect(frame, landmarks=False)
+    # AYAT CHANGE - added below to convert frame to RGB before passing to MTCNN, as MTCNN expects RGB images
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    boxes, probs = mtcnn.detect(rgb_frame, landmarks=False)
+    # boxes, probs = mtcnn.detect(frame, landmarks=False)
 
     if boxes is not None:
         face_count = 0
@@ -420,8 +444,20 @@ def detect_faces(frame, max_faces = 5, PROB_THRESH = 0.90):
                 break
             if prob > PROB_THRESH:
                 try:
+                    #AYAT CHANGE - added below to ensure box coordinates are within frame bounds and to handle empty face regions
                     # Set up region to look for known faces
-                    face_region = frame[ int(box[1]):int(box[3]), int(box[0]):int(box[2])]
+                    # face_region = frame[ int(box[1]):int(box[3]), int(box[0]):int(box[2])]
+
+                    x1 = max(0, int(box[0]))
+                    y1 = max(0, int(box[1]))
+                    x2 = min(frame.shape[1], int(box[2]))
+                    y2 = min(frame.shape[0], int(box[3]))
+
+                    if x2 <= x1 or y2 <= y1:
+                        continue
+
+                    face_region = frame[y1:y2, x1:x2]
+                    # AYAT CHANGE ^^
 
                     ycrcb = cv2.cvtColor(face_region, cv2.COLOR_BGR2YCrCb)
 
@@ -431,8 +467,9 @@ def detect_faces(frame, max_faces = 5, PROB_THRESH = 0.90):
                     # Convert back to BGR
                     face_region = cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2RGB)
 
-                    cv2.imshow('face_region', face_region) 
-                    cv2.moveWindow("face_region", 40,30)
+                    if enable_GUI:
+                        cv2.imshow("face_region", face_region)
+                        cv2.moveWindow("face_region", 40, 30)
 
                     pos_x, pos_y = get_pos_from_box(box)
                     face_list.append(Person(pos_x, pos_y, face_region))    
@@ -450,25 +487,42 @@ def detect_faces(frame, max_faces = 5, PROB_THRESH = 0.90):
 
 
 print("*** Starting ***")
-pygame.init()
+# pygame.init()
 
 # Create detector    
 if enable_face_detect:
     mtcnn = MTCNN()
-    known_faces = generate_encodings_from_dir("./KnownFaces/")
+    known_faces = generate_encodings_from_dir(KNOWN_FACES_DIR)
 
+#AYAT CHANGE - added below to check if known faces are loaded
 # Video Capture and display (only 1st 2 backends work on Win11?)
 if HOME:
-    cap = cv2.VideoCapture(0)  #FIXME: Home camera needs this, PhyzAI camera needs below.  Why???
+    cap = cv2.VideoCapture(CAMERA_INDEX)  #FIXME: Home camera needs this, PhyzAI camera needs below.  Why???
 else:
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)   # CAP_MSMF, CAP_DSHOW, _FFMPEG, _GSTREAMER
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
+if not cap.isOpened():
+    raise RuntimeError(
+        f"Could not open camera index {CAMERA_INDEX}. "
+        "Try CAMERA_INDEX = 0, 1, or 2."
+    )
+
+# ret, frame = cap.read()
+# image_size_x = frame.shape[1]
+# image_size_y = frame.shape[0]
+
 ret, frame = cap.read()
+
+if not ret or frame is None:
+    cap.release()
+    raise RuntimeError("Camera opened but could not read a frame.")
+
 image_size_x = frame.shape[1]
 image_size_y = frame.shape[0]
 
-clock = pygame.time.Clock()
+# clock = pygame.time.Clock()
 
 
 # Initialize on-screen Phyz 
@@ -510,7 +564,9 @@ new_people_list = []
 
 while True:
 
-    clock.tick(20)  # Frame Rate = 30 fps
+    #AYAT CHANGE - removed pygame clock and replaced with time.sleep to limit loop speed
+    # clock.tick(20)  # Frame Rate = 30 fps
+    time.sleep(0.05)  # Limit the loop to approximately 20 FPS
 
     # Read the frame from the webcam
     ret, frame = cap.read()
@@ -551,6 +607,9 @@ while True:
         elif (new_face_dist <= 5) and (people_list[i].time_to_live > 0):  # was 5
             people_list[i].x_pos = new_people_list[i].x_pos
             people_list[i].y_pos = new_people_list[i].y_pos
+            #AYAT CHANGE - added below to update face_region when the face is still detected
+            people_list[i].face_region = new_people_list[i].face_region
+            people_list[i].time_to_live = FACE_DET_TTL
         else:
             people_list[i] = choose_person_location(i, enable_face_camera)  # Choose a new random person
             
@@ -575,13 +634,23 @@ while True:
             if person.name != "":
                 current_names.add(person.name)
 
+        # AYAT CHANGE - added below to update the seen_mentors.txt file with newly seen mentors
         # Check for newly seen mentors
-        new_names = current_names - seen_mentors
+        # new_names = current_names - seen_mentors
 
-        for name in new_names:
-            with open(seen_mentors_file, "a", encoding="utf-8") as f:
-                f.write(f"{name}\n")
-            seen_mentors.add(name)
+        # for name in new_names:
+        #     with open(seen_mentors_file, "a", encoding="utf-8") as f:
+        #         f.write(f"{name}\n")
+        #     seen_mentors.add(name)
+
+        # Keep the file synchronized with mentors currently present.
+        if current_names != seen_mentors:
+            seen_mentors = current_names.copy()
+
+            with open(seen_mentors_file, "w", encoding="utf-8") as f:
+                for name in sorted(seen_mentors):
+                    f.write(f"{name}\n")
+        # AYAT CHANGE ^^
 
 
     # Draw all the people
@@ -595,7 +664,15 @@ while True:
     ############################################
 
     #checks if speaking
-    is_speaking = open("transcribe_status.txt", "r", encoding="utf-8").read().strip() == "recording"
+    # AYAT CHANGE - added below to check if the transcribe_status.txt file exists before reading it
+    # is_speaking = open(transcribe_status_file, "r", encoding="utf-8").read().strip() == "recording"
+
+    try:
+        with open(transcribe_status_file, "r", encoding="utf-8") as f:
+            is_speaking = f.read().strip() == "recording"
+    except FileNotFoundError:
+        is_speaking = False
+    #AYAT CHANGE ^^
 
     if head_duration_count <= 0:
         event_prob = np.random.randint(0,100)
@@ -661,7 +738,7 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-    events = pygame.event.get()
+    # events = pygame.event.get()
     
 
 # Release the video capture and close the window
