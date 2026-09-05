@@ -146,9 +146,11 @@ class MemoryDB:
 
 if __name__ == "__main__":
     db = MemoryDB()
-    print(db.does_memory_exist("Hi Fizz, do you know that I really like robots? Fizz, can you identify who's speaking right now?", accepted_similarity=0.6))
+
+    # print(db.does_memory_exist("Hi Fizz, do you know that I really like robots? Fizz, can you identify who's speaking right now?", accepted_similarity=0.6))
     # db.list_memories()
     # print(db.does_memory_exist("What is LeAnn's dog's name?", accepted_similarity=0.6))
+    print(db.query("Ayaan said: Hey Fizz, what's my favorite color?"))
     # print(db.does_memory_exist("Does Bahadir enjoy math?"))
     # print(db.query("Does Bahadir enjoy math?"))
     # print(db.query("Does Bahadir like math?"))

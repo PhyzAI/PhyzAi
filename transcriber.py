@@ -1,6 +1,5 @@
 import time
 import sounddevice as sd
-import webrtcvad    
 import collections
 import wave
 import numpy as np
@@ -38,7 +37,7 @@ audio captured so far (which may be empty) is returned.
     frequency = random.randint(400, 1000) # Set Frequency
     duration = 300 # Set Duration To 1000 ms == 1 second
 
-    if os.environ.get("COMPUTERNAME") == "PHYZ":
+    if os.getenv("COMPUTERNAME") == "PHYZ":
         import winsound
         winsound.Beep(frequency, duration)
     elif os.environ.get("COMPUTERNAME") == "AYAANMAC":

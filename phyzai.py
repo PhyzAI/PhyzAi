@@ -104,7 +104,7 @@ def augment_prompt_with_mentors(base_prompt, mentor_file="seen_mentors.txt"):
 def audio_recorder_loop():
     with open("speak_status.txt", "r") as f:
         status = f.read().strip().lower()
-        while True and status != "speaking": #TODO the status doesn't reset if you kill the program mid speech, should be force reset
+        while True and status != "speaking":
             currentSerial = ''
             #ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]  # 14:30:22.123
             #print(f"[{ts}] BAHADIR - this is OUTSIDE the if statement")
@@ -120,7 +120,7 @@ def audio_recorder_loop():
                 
 
 
-                if os.environ.get("COMPUTERNAME") == "PHYZ":
+                if os.getenv("COMPUTERNAME") == "PHYZ":
                     import winsound
                     winsound.Beep(frequency, duration)
                     winsound.PlaySound('SystemAsterisk', winsound.SND_ALIAS)

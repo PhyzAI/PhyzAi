@@ -1,5 +1,5 @@
 from flask.cli import load_dotenv
-from ollama import chat
+# from ollama import chat
 import os
 
 from openai import OpenAI
@@ -32,7 +32,7 @@ def should_remember(prompt: str, memory: MemoryDB) -> bool:
     # If Phyz knows who they are talking to, remember the data under that user's name, if not, remember under the "guest" username
     # Can use vision/face recognition to identify faces
 
-    exists = memory.does_memory_exist(prompt, accepted_similarity=0.6)
+    exists = memory.does_memory_exist(prompt, accepted_similarity=0.70)
     if DEBUG.DEBUG_MODE: print(f"Memory related to {prompt} already exists: {exists}")
     if exists: return False
 
