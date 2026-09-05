@@ -10,12 +10,14 @@ import random
 from scipy.io import wavfile
 import os
 
+from sympy.parsing.sym_expr import cin
 from sympy.physics.quantum.gate import normalized
 
 import remote_control
 from actual_SLM import should_remember
 from apologies import Apologies
 from dadjokes import DadJokes
+from debug_config import DEBUG
 from thinkingLines import ThinkingLines
 from actual_chatgpt import ask_chatgpt
 from actual_gemini import ask_gemini
@@ -73,11 +75,17 @@ last_assistant_response: str | None = None
 SYSTEM_PROMPT = prompt
 
 def init_files(): #init any files to specific states when you start up phyz
-    # as of 8/29 being used just to reset the state of speak_status.txt and transcribe_status.txt to be blank on start
+    # as of 8/29 being used just to reset the state of speak_status.txt, transcribe_status.txt, and seen/spoken_to_mentors.txt to be blank on start
     with open("speak_status.txt", "w", encoding="utf-8") as f:
         f.write("")
 
     with open("transcribe_status.txt", "w", encoding="utf-8") as f:
+        f.write("")
+
+    with open("spoken_to_mentors.txt", "w", encoding="utf-8") as f:
+        f.write("")
+
+    with open("seen_mentors.txt", "w", encoding="utf-8") as f:
         f.write("")
 
 
@@ -316,17 +324,23 @@ def main():
                 speak("I don't have anything to remember yet.")
             continue
 
-        with open("names2know.txt", "r") as nameFile:
+        with open("names2know.txt", "r") as nameFile: # Keep this updated please
             for name in nameFile.readlines():
-                if f"I am {name.strip().lower()}" in normalized or f"This is {name.strip().lower()}" in normalized: # TODO: associate with voice, whenever it changes, wipe this
+                if f"I am {name.strip().lower()}" in normalized or f"This is {name.strip().lower()}" in normalized:
                     # TODO have a json file to keep track of who is seen and who isn't
                     with open("seen_mentors.txt", "a+", encoding="utf-8") as f:  # read and append mode
                         f.seek(0) #start at beginning of file
                         contents = f.read()
-                        if name.strip().lower() not in contents or speaker.strip().lower() not in contents and speaker != "Unknown User": # also add current speaker if not already in the list
+                        if name.strip().lower() not in contents:
                             f.write(f"{name.strip().lower()}\n")
-                            print(f"added {name.strip().lower()} to seen mentors file")
+                            if DEBUG.DEBUG_MODE: print(f"added {name.strip().lower()} to seen mentors file")
 
+        #the speaker name has to be registered in names2know anyway, so we don't really need to check that here, its more for the database of users for vision
+        #TODO possibly could check the last speaker, and compare them so you only change the spoken mentors file if the speaker changes
+        if speaker.strip().lower() != "unknown user":
+            with open("spoken_to_mentors.txt", "w", encoding="utf-8") as f:  # read/write mode
+                    f.write(f"{speaker.strip().lower()}\n")
+                    if DEBUG.DEBUG_MODE: print(f"added {speaker.strip().lower()} to seen spoken mentors file")
 
 
         # Respond with Chat if Phyz is mentioned
@@ -372,7 +386,7 @@ def main():
                 # result = should_remember(transcription, memory_db) # without the second thread, can toggle off & on for testing
 
                 if result:
-                    to_remember = f"Q: {transcription}\nA: {response}" # I don't think we need to store the answer as apart of what we remember but we can for this example
+                    to_remember = f"A: {response}" #TODO FIXED -  I don't think we need to store the answer as apart of what we remember but we can for this example
                     if speaker != "Unknown User": metadata = {"speaker": speaker} #first try to assign speaker from the voice
                     else:
                         #then try from whoever is being seen

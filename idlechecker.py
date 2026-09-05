@@ -40,7 +40,7 @@ def weighted_choice(weight_dict):
             return key
         upto += weight
 
-#gets who has been seen from file to feed idle propmts
+#gets who has been seen/spoken to from file to feed idle propmts
 def get_seen_mentors(filepath="seen_mentors.txt"):
     try:
         with open(filepath, "r", encoding="utf-8") as f:
@@ -66,14 +66,16 @@ def check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time
         # Inject mentor if needed
         if behavior == "moderator_poke":
             seen = get_seen_mentors() # TODO need to look into how this is being updated
-            if seen:
-                chosen_mentor = random.choice(seen)
+            spoken = get_seen_mentors("spoken_to_mentors.txt")
+
+            if seen or spoken:
+                chosen_mentor = random.choice(seen+spoken)
                 relevant_memories = memory_db.filter_by_metadata("speaker", "ayaan")
                 memory = random.choice(relevant_memories["text"])
                 prompt = f"Say something playful to poke fun at {chosen_mentor}, one of the moderators. Be very light-hearted and funny."
 
                 if memory is not None: #if there are memories of the chosen mentors
-                    prompt+=" You can also incorporate something about the mentor into the joke. {chosen_mentor} once said \"{memory}\" "
+                    prompt+=f" You can also incorporate something about the mentor into the joke. {chosen_mentor} once said \"{memory}\" "
 
 
 
