@@ -4,6 +4,10 @@ from pathlib import Path
 
 import pyttsx3
 
+# This is how we can modify the speech in software instead of the external hw box.
+from speak_robot_pitchNotSpeed import speak_robot # Import the speak_robot function from the other file
+
+
 engine = pyttsx3.init()
 engine.setProperty('rate', 200)
 engine.setProperty('volume', 1)
@@ -20,7 +24,8 @@ def write(text: str, path: Path | str):
         time.sleep(0.1)
 
 
-def speak(text: str):
+def speak(text: str, useSpeakRobot: bool = False):
+
     # bahadir addition three lines below
     with open("speak_status.txt", "r") as f:
         status = f.read().strip().lower()
@@ -29,8 +34,11 @@ def speak(text: str):
                 f.write("speaking")
                 #print("Bahadir Debug actually speaking")
 
-    engine.say(text)
-    engine.runAndWait()
+    if useSpeakRobot:
+        speak_robot(text)   # note, the wait is included
+    else:
+        engine.say(text)
+        engine.runAndWait()
     open("speak_status.txt", "w", encoding="utf-8").close()
     #print("Bahadir Debug actually speaking")
 
