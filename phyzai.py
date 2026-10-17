@@ -1,3 +1,6 @@
+
+ATHOME=False
+
 from io import BytesIO
 
 import sounddevice as sd
