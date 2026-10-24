@@ -39,6 +39,7 @@ def speak(text: str, useSpeakRobot: bool = False):
     else:
         engine.say(text)
         engine.runAndWait()
+    # Clearn the speak_status.txt file after speaking is done
     open("speak_status.txt", "w", encoding="utf-8").close()
     #print("Bahadir Debug actually speaking")
 

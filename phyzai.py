@@ -37,6 +37,12 @@ from datetime import datetime
 # Global switches
 USE_SPEAK_ROBOT = False # Use software voice-changing instead of HW voice-changer box
 
+# Ensure speak_status.txt exists to avoid FileNotFoundError
+# This file is used to indicate, across processes, whether the system is currently speaking. It helps prevent overlapping speech.
+if not os.path.exists("speak_status.txt"):
+    with open("speak_status.txt", "w", encoding="utf-8") as f:
+        f.write("")
+
 
 # Init communication with Arduino (optional: runs without serial if COM4 unavailable)
 LOW_COMMAND = bytes('l', "utf-8")
