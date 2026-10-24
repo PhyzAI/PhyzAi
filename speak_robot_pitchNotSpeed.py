@@ -3,10 +3,11 @@ import numpy as np
 import pyttsx3
 import sounddevice as sd
 import soundfile as sf
-#import librosa  # <-- Added librosa
-from audiomentations import PitchShift
+from audiomentations import PitchShift #audiomentations 0.39.0
 
-def speak_robot(text, pitch_factor=1.23, carrier_freq=115.0, carrier_amp=0.1):
+BYPASS = False
+
+def speak_robot(text, pitch_factor=1.29, carrier_freq=115.0, carrier_amp=0.1):
     engine = pyttsx3.init()
     
     # Optional: Force the specific Windows 11 David voice if needed
@@ -27,14 +28,11 @@ def speak_robot(text, pitch_factor=1.23, carrier_freq=115.0, carrier_amp=0.1):
         audio = np.mean(audio, axis=1)
         
     # --- NEW PITCH SHIFT METHOD ---
-    # librosa expects pitch shifts in 'semitones' (half-steps on a piano).
-    # To convert your 1.23 multiplier into semitones: 12 * log2(1.23) ≈ 3.58 semitones up.
     n_semitones = 12 * np.log2(pitch_factor)
 
-    shifter = PitchShift(min_semi_tones=n_semitones, max_semi_tones=n_semitones, p=1.0)
+    # Corrected parameter names: min_semitones and max_semitones
+    shifter = PitchShift(min_semitones=n_semitones, max_semitones=n_semitones, p=1.0)
     
-    # This shifts the pitch up while keeping the EXACT original duration
-    #pitched_audio = librosa.effects.pitch_shift(audio, sr=sample_rate, n_steps=n_semitones)
     pitched_audio = shifter(samples=audio, sample_rate=sample_rate)
     # ------------------------------
     
@@ -49,14 +47,20 @@ def speak_robot(text, pitch_factor=1.23, carrier_freq=115.0, carrier_amp=0.1):
     max_val = np.max(np.abs(robot_audio))
     if max_val > 0:
         robot_audio = robot_audio / max_val
-    
-    # Output to Windows speakers
-    sd.play(robot_audio, sample_rate)
-    sd.wait()
-    
+
+    if BYPASS:
+         # Output to Windows speakers
+         sd.play(audio, sample_rate)
+         sd.wait()
+    else:
+        # Output to Windows speakers
+        sd.play(robot_audio, sample_rate)
+        sd.wait()
+        
     # Clean up file
     if os.path.exists(temp_filename):
         os.remove(temp_filename)
 
 if __name__ == "__main__":
-    speak_robot("PhyzAI system pipeline optimized. Pitch shifting decoupled from time.")
+    #speak_robot("PhyzAI system pipeline optimized. Pitch shifting decoupled from time.")
+    speak_robot("Ah. I'm PhyzAI, I love solving math and engineering problems")

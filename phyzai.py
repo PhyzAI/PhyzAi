@@ -35,7 +35,8 @@ from datetime import datetime
 
 
 # Global switches
-USE_SPEAK_ROBOT = False # Use software voice-changing instead of HW voice-changer box
+DEBUG = True
+USE_SPEAK_ROBOT = True # Use software voice-changing instead of HW voice-changer box
 
 # Ensure speak_status.txt exists to avoid FileNotFoundError
 # This file is used to indicate, across processes, whether the system is currently speaking. It helps prevent overlapping speech.
@@ -175,7 +176,9 @@ def main():
 #    serialObj.write(LOW_COMMAND)   
 #    serialObj.flush()
 
-
+    if DEBUG:
+        time.sleep(1.0)
+        speak("Hi There!", useSpeakRobot=USE_SPEAK_ROBOT)
 
     while True:
         try:
@@ -220,7 +223,7 @@ def main():
         #############################################################
         if normalized == "exit" or "fizz exit" in normalized:
             print("Goodbye! PHYZAI session ended.")
-            speak("goodbye")
+            speak("goodbye", useSpeakRobot=USE_SPEAK_ROBOT)
             break
 
         # Handle LLM switch voice commands
@@ -252,7 +255,7 @@ def main():
         if dad_jokes.should_tell_another(normalized):
             joke = dad_jokes.get_random_joke()
             rp(f"PHYZAI: [bold bright_green]playing[/] [yellow]joke[/] {joke}")
-            speak(joke)
+            speak(joke, useSpeakRobot=USE_SPEAK_ROBOT)
             continue
         elif dad_jokes.is_joke_request(normalized) and normalized not in ["tell another", "another"]:
             joke = dad_jokes.get_random_joke()
@@ -298,10 +301,10 @@ def main():
                 memory_text = f"Q: {last_user_query}\nA: {last_assistant_response}"
                 memory_db.add_memory(memory_text)
                 rp(f"PHYZAI: [bold bright_green]memorized[/] {memory_text}")
-                speak("Got it. I will remember that.")
+                speak("Got it. I will remember that.", useSpeakRobot=USE_SPEAK_ROBOT)
             else:
                 rp("PHYZAI: [yellow]No previous question/answer to remember yet.[/]")
-                speak("I don't have anything to remember yet.")
+                speak("I don't have anything to remember yet.", useSpeakRobot=USE_SPEAK_ROBOT)
             continue
 
         # Respond with Chat if Phyz is mentioned
@@ -337,7 +340,7 @@ def main():
                 last_user_query = transcription
                 last_assistant_response = response
                 rp(f"PHYZAI: [bold bright_green]saying[/] [green]llm[/] {response}")
-                speak(response)
+                speak(response, useSpeakRobot=USE_SPEAK_ROBOT)
 
 
         if (check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time))[0]:
