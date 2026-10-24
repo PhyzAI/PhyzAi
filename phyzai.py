@@ -34,6 +34,10 @@ import serial
 from datetime import datetime
 
 
+# Global switches
+USE_SPEAK_ROBOT = False # Use software voice-changing instead of HW voice-changer box
+
+
 # Init communication with Arduino (optional: runs without serial if COM4 unavailable)
 LOW_COMMAND = bytes('l', "utf-8")
 HIGH_COMMAND = bytes('h', "utf-8")
@@ -178,7 +182,7 @@ def main():
 
             #check to see if there are any new mentors in screen
             if audio_queue.empty():  # or similar condition to ensure Phyz is not busy
-                check_for_new_mentors_and_greet(speak)
+                check_for_new_mentors_and_greet(speak, USE_SPEAK_ROBOT)
 
 
             response, last_idle_response_time = check_idle_and_prompt_chatgpt(
@@ -186,7 +190,7 @@ def main():
             )
             if response:
                 print(f"PHYZAI (idle): {response}")
-                speak(response)
+                speak(response, useSpeakRobot=USE_SPEAK_ROBOT)
             continue
 
 
