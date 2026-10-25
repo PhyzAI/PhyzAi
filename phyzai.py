@@ -151,7 +151,7 @@ def main():
             current_time = time.time()
 
             if audio_queue.empty():
-                check_for_new_mentors_and_greet(speak, USE_SPEAK_ROBOT)
+                check_for_new_mentors_and_greet(speak) #, USE_SPEAK_ROBOT)
 
             response, last_idle_response_time = check_idle_and_prompt_chatgpt(
                 last_interaction_time, last_idle_response_time
