@@ -85,6 +85,7 @@ def augment_prompt_with_mentors(base_prompt, mentor_file="seen_mentors.txt"):
 
 
 def audio_recorder_loop():
+    #FIXME: What happends if Phyz starts speaking in the middle, after the check?
     while True:
         # Wait if Phyz is currently speaking using the thread event
         while PhyzShared.check_if_speaking():
