@@ -5,6 +5,8 @@ ATHOME=False
 DEBUG = True
 listeningmode = True # Continuous listening mode (True) or button activated mode (False)
 
+# See "ttsx.py" global settings for DONT_SPEAK_IF_LISTENING, DONT_SPEAK_RETRIES, and DONT_SPEAK_RETRY_DELAY
+
 
 from io import BytesIO
 
@@ -100,7 +102,7 @@ def audio_recorder_loop():
         if (listeningmode == True) or (currentSerial == '4'):
             frequency = random.randint(400, 1000)
             duration = 300
-            winsound.Beep(frequency, duration)
+            #winsound.Beep(frequency, duration)
 
             audio = record_until_silence(timeout=20)
             audio_queue.put(audio)

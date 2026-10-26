@@ -1,5 +1,7 @@
 USE_SPEAK_ROBOT = True # Use software voice-changing instead of HW voice-changer box
-
+DONT_SPEAK_IF_LISTENING = True # If Phyz is listening, don't speak (to avoid interrupting)
+DONT_SPEAK_RETRIES = 5
+DONT_SPEAK_RETRY_DELAY = 0.5  # seconds
 
 import os
 import time
@@ -42,4 +44,12 @@ def _execute_speech(text: str, useSpeakRobot: bool):
 
 
 def speak(text: str, useSpeakRobot: bool = False):
-    _execute_speech(text, useSpeakRobot = USE_SPEAK_ROBOT)
+    if DONT_SPEAK_IF_LISTENING:
+        for _ in range(DONT_SPEAK_RETRIES):
+            if not PhyzShared.get_listening_status():
+                break
+            time.sleep(DONT_SPEAK_RETRY_DELAY)
+
+        if PhyzShared.get_listening_status():
+            return
+    _execute_speech(text, useSpeakRobot=USE_SPEAK_ROBOT)
