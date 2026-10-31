@@ -1,4 +1,8 @@
 
+#TODO:
+# * Add a Transcribing event so that we can stop phyz listening while transcribing
+
+
 
 # Global switches
 ATHOME=False

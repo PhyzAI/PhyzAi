@@ -123,10 +123,17 @@ def transcribe_audio(model, audio_bytes, sample_rate=16000):
     """
     Transcribe given raw audio bytes using the Whisper model.
     """
+
+    #PhyzShared.set_speaking_status(True) #FIXME: prevent phyz from listening while transcribing, but this is a hacky way to do it. Should be handled better in the future.
+
     # Save temp file (Whisper loads audio from file)
     temp_filename = "temp_audio.wav"
     save_wav(temp_filename, audio_bytes, sample_rate)
 
     print("Transcribing...")
     result = model.transcribe(temp_filename)
+
+    #PhyzShared.set_speaking_status(False) #FIXME
+
+
     return result['text'].strip()
