@@ -1,5 +1,12 @@
 
+
+# Global switches
 ATHOME=False
+DEBUG = True
+listeningmode = True # Continuous listening mode (True) or button activated mode (False)
+
+# See "ttsx.py" global settings for DONT_SPEAK_IF_LISTENING, DONT_SPEAK_RETRIES, and DONT_SPEAK_RETRY_DELAY
+
 
 from io import BytesIO
 
@@ -26,23 +33,14 @@ from transcriber import record_until_silence, transcribe_audio
 from idlechecker import check_idle_and_prompt_chatgpt
 from OPTIONS import TTS, prompt
 from OPTIONS import prompt, TTS
-#from tts import TTS
 from ttsx import speak as ttsx_speak
 from mentorgreeter import check_for_new_mentors_and_greet
 from rich import print as rp
 import serial
 from datetime import datetime
+import PhyzShared
 
 
-# Global switches
-DEBUG = True
-USE_SPEAK_ROBOT = True # Use software voice-changing instead of HW voice-changer box
-
-# Ensure speak_status.txt exists to avoid FileNotFoundError
-# This file is used to indicate, across processes, whether the system is currently speaking. It helps prevent overlapping speech.
-if not os.path.exists("speak_status.txt"):
-    with open("speak_status.txt", "w", encoding="utf-8") as f:
-        f.write("")
 
 
 # Init communication with Arduino (optional: runs without serial if COM4 unavailable)
@@ -50,7 +48,6 @@ LOW_COMMAND = bytes('l', "utf-8")
 HIGH_COMMAND = bytes('h', "utf-8")
 serialObj = None
 try:
-    #COM4 on Phyz and COM3 on Bahadir's laptop
     if os.environ.get("COMPUTERNAME") == "BAHADIRGRAM":
         serialObj = serial.Serial('COM3', 9600, bytesize=8, parity='N', stopbits=1, timeout=None)
     else:
@@ -62,19 +59,15 @@ except serial.SerialException as e:
     rp(f"[yellow]Serial port COM4 not available: {e}[/yellow]")
     rp("[yellow]Running without Arduino. Check Device Manager for the correct COM port.[/yellow]")
 
-# For the continuous listening mode, we need True for listeningmode. For button activated mode
-# switch to False.
-listeningmode = True
 
 speak = ttsx_speak
-# speak = TTS().speak
+
 
 audio_queue = queue.Queue()
 last_interaction_time = time.time()
 
 #Create space to store memory of responses
 conversation_history = []
-# Keep track of the last Q/A pair for "remember that" commands
 last_user_query: str | None = None
 last_assistant_response: str | None = None
 
@@ -94,60 +87,52 @@ def augment_prompt_with_mentors(base_prompt, mentor_file="seen_mentors.txt"):
 
 
 def audio_recorder_loop():
-    with open("speak_status.txt", "r") as f:
-        status = f.read().strip().lower()
-        while True and status != "speaking":
-            currentSerial = ''
-            #ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]  # 14:30:22.123
-            #print(f"[{ts}] BAHADIR - this is OUTSIDE the if statement")
+    #FIXME: What happends if Phyz starts speaking in the middle, after the check?
+    while True:
+        # Wait if Phyz is currently speaking using the thread event
+        while PhyzShared.check_if_speaking():
+            time.sleep(0.1)
 
-            if serialObj is not None and listeningmode == False:
-                serialObj.timeout = None  # blocking read
-                raw = serialObj.read()
-                currentSerial = raw.decode('ascii', errors='ignore') if raw else ''
-                #print(currentSerial)
-            if (listeningmode == True) or (currentSerial == '4'):
-                frequency = random.randint(400, 1000) # Set Frequency
-                duration = 300 # Set Duration To 1000 ms == 1 second
-                winsound.Beep(frequency, duration)
-                #winsound.PlaySound('SystemAsterisk', winsound.SND_ALIAS)
+        currentSerial = ''
+        if serialObj is not None and listeningmode == False:
+            serialObj.timeout = None  # blocking read
+            raw = serialObj.read()
+            currentSerial = raw.decode('ascii', errors='ignore') if raw else ''
 
-                audio = record_until_silence(timeout=20)  # seconds
+        if (listeningmode == True) or (currentSerial == '4'):
+            frequency = random.randint(400, 1000)
+            duration = 300
+            #winsound.Beep(frequency, duration)
 
-                audio_queue.put(audio)
+            audio = record_until_silence(timeout=20)
+            audio_queue.put(audio)
 
-                f.seek(0)
-                status = f.read().strip().lower()
-
-                while True and status == "speaking":
-                    time.sleep(0.1)
-                    f.seek(0)
-                    status = f.read().strip().lower()
-                #print("Bahadir Debug listening loop")
-
-
+            while PhyzShared.check_if_speaking():
+                time.sleep(0.1)
 
 
 def play_wav(raw: bytes):
-    with BytesIO(raw) as filelike:
-        samplerate, data = wavfile.read(filelike)
-    sd.play(data, samplerate)
-    sd.wait()
-
+    """Play a WAV file raw bytes while updating the thread-safe speaking status."""
+    PhyzShared.set_speaking_status(True)
+    try:
+        with BytesIO(raw) as filelike:
+            samplerate, data = wavfile.read(filelike)
+        sd.play(data, samplerate)
+        sd.wait()
+    finally:
+        PhyzShared.set_speaking_status(False)
 
 
 def main():
-    model = whisper.load_model("base")  # Load Whisper model once
-    dad_jokes = DadJokes()  # Load jokes once
-    apologies = Apologies()  # Load apologies once
+    model = whisper.load_model("base")
+    dad_jokes = DadJokes()
+    apologies = Apologies()
     thinking_lines = ThinkingLines()
-    memory_db = MemoryDB()  # Persistent memory storage (semantic vector store)
+    memory_db = MemoryDB()
 
-    #control_queue = remote_control.start_auto() #I don't know what this is for
-    last_idle_response_time = 0  # separate from last user interaction
-    IDLE_PROMPT_INTERVAL = 15    # seconds between idle prompts
+    last_idle_response_time = 0
+    IDLE_PROMPT_INTERVAL = 15
 
-    # Track most recent question/answer pair for "remember that" support
     last_user_query = None
     last_assistant_response = None
 
@@ -155,78 +140,40 @@ def main():
 
     print("PHYZAI is listening... Say 'exit' to quit.")
 
-
-    #############################
-    ###     Recorder Loop     ###
-    #############################
-    #TODO: Make button activated option
-    #would add a if statement at the front like:
-    #if button flag true then
-
-    recorder_thread = threading.Thread(target=audio_recorder_loop, daemon=True)   # This is the thread that runs record until silence
+    recorder_thread = threading.Thread(target=audio_recorder_loop, daemon=True)
     recorder_thread.start()
-
-#for speak, need to add Bahadir digital out for mouth
-#    serialObj.write(HIGH_COMMAND)
-#    serialObj.flush()
-
-#    around 
-#    speak("text")
-
-#    serialObj.write(LOW_COMMAND)   
-#    serialObj.flush()
 
     if DEBUG:
         time.sleep(1.0)
-        speak("Hi There!", useSpeakRobot=USE_SPEAK_ROBOT)
+        speak("Hi There!")
 
     while True:
         try:
-            # Try to get recorded audio
-            audio_bytes = audio_queue.get(timeout=1)  # wait max 1 sec
-            #print("Bahadir Debug speaking loop")
-
+            audio_bytes = audio_queue.get(timeout=1)
         except queue.Empty:
             current_time = time.time()
 
-            #check to see if there are any new mentors in screen
-            if audio_queue.empty():  # or similar condition to ensure Phyz is not busy
-                check_for_new_mentors_and_greet(speak, USE_SPEAK_ROBOT)
-
+            if audio_queue.empty():
+                check_for_new_mentors_and_greet(speak) #, USE_SPEAK_ROBOT)
 
             response, last_idle_response_time = check_idle_and_prompt_chatgpt(
                 last_interaction_time, last_idle_response_time
             )
             if response:
                 print(f"PHYZAI (idle): {response}")
-                speak(response, useSpeakRobot=USE_SPEAK_ROBOT)
+                speak(response)
             continue
 
-
-        ########################################################
-        #####                Transcription                ######
-        ########################################################
-
-        #TODO: make button activated option (would look like below comments)
-        #if button activated true
-        #   if button pressed set pressed flag true
-        #       if button not pressed and pressed flag is true then call record until silence       
-        #(This allows us to not accidentally double call a method if the button is being held down)
-
-        transcription = transcribe_audio(model, audio_bytes)  
+        transcription = transcribe_audio(model, audio_bytes)
         rp(f"[cyan][bold]You said:[/] {transcription}[/]")
 
         normalized = transcription.lower().strip().strip(".!?")
 
-        #############################################################
-        # Handle exit command
-        #############################################################
         if normalized == "exit" or "fizz exit" in normalized:
             print("Goodbye! PHYZAI session ended.")
-            speak("goodbye", useSpeakRobot=USE_SPEAK_ROBOT)
+            speak("goodbye")
             break
 
-        # Handle LLM switch voice commands
         if "fizz switch to gemini" in normalized:
             with open("llm2use.txt", "w", encoding="utf-8") as f:
                 f.write("gemini")
@@ -243,19 +190,15 @@ def main():
             rp("[green]Switched LLM to ChatGPT[/]")
             continue
 
-        # New: flush queue via voice command
         if normalized in ("flush", "clear queue", "clear audio queue"):
             flush_audio_queue()
             rp("[yellow]Audio queue flushed[/]")
             continue
 
-        #############################################################
-        # Check for joke requests
-        #############################################################
         if dad_jokes.should_tell_another(normalized):
             joke = dad_jokes.get_random_joke()
             rp(f"PHYZAI: [bold bright_green]playing[/] [yellow]joke[/] {joke}")
-            speak(joke, useSpeakRobot=USE_SPEAK_ROBOT)
+            speak(joke)
             continue
         elif dad_jokes.is_joke_request(normalized) and normalized not in ["tell another", "another"]:
             joke = dad_jokes.get_random_joke()
@@ -263,27 +206,20 @@ def main():
             speak(joke)
             continue
         else:
-            # Reset joke flag only if input is NOT joke related
             dad_jokes.reset_joke_flag()
 
-        #############################################################
-        # Check for apology requests
-        #############################################################
         apology_response = apologies.handle_apology_request(transcription)
         if apology_response:
             rp(f"PHYZAI: [bold bright_green]playing[/] [red]apology[/] {apology_response.text}")
             play_wav(apology_response.raw)
             continue
 
-        # Say thinking line while PHYZ figures out what its saying and renders it (These have not been prefabed yet)
         if random.random() < 0.5:
             thinking = thinking_lines.get_random_think_line()
             if thinking:
                 print(f"PHYZAI (thinking): {thinking.text}")
                 play_wav(thinking.raw)
 
- 
-        # Otherwise normal GPT response
         trigger_words = [
             "phyz", "fizzy", "fizz", "phizz", "fizzay", "phiz", "phys", "fisy",
             "fizzey", "fizzzy", "phisy", "fiz", "fizzee", "phizzy",
@@ -291,31 +227,23 @@ def main():
         ]
 
         normalized = transcription.lower()
-
-        #Make prompt include mentors to address if Phyz is confused
         enhanced_prompt = augment_prompt_with_mentors(SYSTEM_PROMPT)
 
-        # If user asked Phyz to remember the last Q/A pair, store it and don't call the LLM
         if "remember that" in normalized or "remember this" in normalized:
             if last_user_query and last_assistant_response:
                 memory_text = f"Q: {last_user_query}\nA: {last_assistant_response}"
                 memory_db.add_memory(memory_text)
                 rp(f"PHYZAI: [bold bright_green]memorized[/] {memory_text}")
-                speak("Got it. I will remember that.", useSpeakRobot=USE_SPEAK_ROBOT)
+                speak("Got it. I will remember that.")
             else:
                 rp("PHYZAI: [yellow]No previous question/answer to remember yet.[/]")
-                speak("I don't have anything to remember yet.", useSpeakRobot=USE_SPEAK_ROBOT)
+                speak("I don't have anything to remember yet.")
             continue
 
-        # Respond with Chat if Phyz is mentioned
         if any(word in normalized for word in trigger_words):
-            # bahadir addition - three lines below
             flush_audio_queue()
-            with open("speak_status.txt", "w", encoding="utf-8") as f:
-                f.write("speaking")
-                #print("Bahadir Debug heard Phyz")
+            PhyzShared.set_speaking_status(True)
 
-            # Add relevant memories to the prompt before calling the LLM
             memory_context = None
             memories = memory_db.query(transcription, top_k=5)
             if memories:
@@ -328,31 +256,28 @@ def main():
             except FileNotFoundError:
                 pass
 
-            if llm_choice == "gemini":
-                response = ask_gemini(enhanced_prompt, transcription, memory_context=memory_context)
-            elif llm_choice == "claude":
-                response = ask_claude(enhanced_prompt, transcription, memory_context=memory_context)
-            else:
-                response = ask_chatgpt(enhanced_prompt, transcription, memory_context=memory_context)
+            try:
+                if llm_choice == "gemini":
+                    response = ask_gemini(enhanced_prompt, transcription, memory_context=memory_context)
+                elif llm_choice == "claude":
+                    response = ask_claude(enhanced_prompt, transcription, memory_context=memory_context)
+                else:
+                    response = ask_chatgpt(enhanced_prompt, transcription, memory_context=memory_context)
 
-            if response:
-                last_interaction_time = time.time()
-                last_user_query = transcription
-                last_assistant_response = response
-                rp(f"PHYZAI: [bold bright_green]saying[/] [green]llm[/] {response}")
-                speak(response, useSpeakRobot=USE_SPEAK_ROBOT)
-
+                if response:
+                    last_interaction_time = time.time()
+                    last_user_query = transcription
+                    last_assistant_response = response
+                    rp(f"PHYZAI: [bold bright_green]saying[/] [green]llm[/] {response}")
+                    speak(response)
+            finally:
+                PhyzShared.set_speaking_status(False)
 
         if (check_idle_and_prompt_chatgpt(last_interaction_time, last_idle_response_time))[0]:
             last_interaction_time = time.time()
 
 
 def flush_audio_queue(q: queue.Queue = audio_queue):
-    """
-    Drain all currently queued audio frames without blocking.
-    Note: this is not atomic with producers — new items may be added
-    while draining. For atomic swap, use a Lock and replace the queue.
-    """
     try:
         while True:
             q.get_nowait()

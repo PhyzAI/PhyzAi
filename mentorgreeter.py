@@ -18,7 +18,7 @@ with open(GREETINGS_FILE_PATH, "r", encoding="utf-8") as f:
 greeted_mentors = {}  # {mentor_name: last_greeted_timestamp}
 
 
-def check_for_new_mentors_and_greet(speak_fn, useSpeakRobot=False):
+def check_for_new_mentors_and_greet(speak_fn, useSpeakRobot=True):
     global greeted_mentors
     current_time = time.time()
     TIME_TO_FORGET = 100  # seconds (adjust as needed)
@@ -52,7 +52,7 @@ def check_for_new_mentors_and_greet(speak_fn, useSpeakRobot=False):
                 greeting = greeting_template.replace("{name}", name).replace("{Mentor}", name)
 
             print(f"PHYZAI (mentor greet): {greeting}")
-            speak_fn(greeting, useSpeakRobot=useSpeakRobot)
+            speak_fn(greeting) #, useSpeakRobot=useSpeakRobot)
             greeted_mentors[name] = current_time
 
     # Remove mentors who have left the frame (no longer in file)

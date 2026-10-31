@@ -1,3 +1,8 @@
+USE_SPEAK_ROBOT = True # Use software voice-changing instead of HW voice-changer box
+DONT_SPEAK_IF_LISTENING = True # If Phyz is listening, don't speak (to avoid interrupting)
+DONT_SPEAK_RETRIES = 5
+DONT_SPEAK_RETRY_DELAY = 0.5  # seconds
+
 import os
 import time
 from pathlib import Path
@@ -6,6 +11,7 @@ import pyttsx3
 
 # This is how we can modify the speech in software instead of the external hw box.
 from speak_robot_pitchNotSpeed import speak_robot # Import the speak_robot function from the other file
+import PhyzShared
 
 
 engine = pyttsx3.init()
@@ -24,23 +30,26 @@ def write(text: str, path: Path | str):
         time.sleep(0.1)
 
 
+def _execute_speech(text: str, useSpeakRobot: bool):
+    """Helper function to manage speaking state safely and execute the speech."""
+    PhyzShared.set_speaking_status(True)
+    try:
+        if useSpeakRobot:
+            speak_robot(text)   # note, the wait is included
+        else:
+            engine.say(text)
+            engine.runAndWait()
+    finally:
+        PhyzShared.set_speaking_status(False)
+
+
 def speak(text: str, useSpeakRobot: bool = False):
+    if DONT_SPEAK_IF_LISTENING:
+        for _ in range(DONT_SPEAK_RETRIES):
+            if not PhyzShared.check_if_listening():
+                break
+            time.sleep(DONT_SPEAK_RETRY_DELAY)
 
-    # bahadir addition three lines below
-    with open("speak_status.txt", "r") as f:
-        status = f.read().strip().lower()
-        if status != "speaking":
-            with open("speak_status.txt", "w", encoding="utf-8") as f:
-                f.write("speaking")
-                #print("Bahadir Debug actually speaking")
-
-    if useSpeakRobot:
-        speak_robot(text)   # note, the wait is included
-    else:
-        engine.say(text)
-        engine.runAndWait()
-    # Clearn the speak_status.txt file after speaking is done
-    open("speak_status.txt", "w", encoding="utf-8").close()
-    #print("Bahadir Debug actually speaking")
-
-    # engine.stop()
+        if PhyzShared.check_if_listening():
+            return
+    _execute_speech(text, useSpeakRobot=USE_SPEAK_ROBOT)

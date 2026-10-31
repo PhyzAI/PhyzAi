@@ -6,14 +6,17 @@ import wave
 import numpy as np
 import random
 import winsound
-import webrtcvad    
+#import webrtcvad    
 import collections
+
+import PhyzShared
 
 #Bahadir: original vad_aggressiveness was 2
 def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=0.8, vad_aggressiveness=3, timeout=None):
     """
     Records audio from the microphone, starts recording when speech is detected,
     and stops recording shortly after speech ends.
+    Also stops immediately if PhyzShared.get_is_speaking() returns True.
 
     Parameters:
         sample_rate (int): sample rate for the input stream
@@ -22,10 +25,10 @@ def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=
         vad_aggressiveness (int): VAD aggressiveness level (0-3)
         timeout (float|None): maximum number of seconds to wait before returning
             If the timeout expires before speech/silence are detected the
-audio captured so far (which may be empty) is returned.
+            audio captured so far (which may be empty) is returned.
 
     Returns:
-        bytes: The raw audio bytes recorded (may be empty on timeout).
+        bytes: The raw audio bytes recorded (may be empty on timeout or if interrupted).
     """
     vad = webrtcvad.Vad(vad_aggressiveness)
     frame_size = int(sample_rate * frame_duration / 1000)
@@ -50,6 +53,11 @@ audio captured so far (which may be empty) is returned.
                 print("Timeout reached, returning audio captured so far.")
                 break
 
+            # Check if the AI has started speaking (interrupt condition)
+            if PhyzShared.check_if_speaking():
+                print("PhyzAI is speaking, stopping recording.")
+                break
+
             try:
                 data, overflowed = stream.read(frame_size)
                 if overflowed:
@@ -64,9 +72,8 @@ audio captured so far (which may be empty) is returned.
                     if num_voiced > 0.99 * ring_buffer.maxlen:
                         triggered = True
                         print("Speech detected, recording...")
-                        #write into file to tell phyz to look at mic
-                        with open("transcribe_status.txt", "w", encoding="utf-8") as f:
-                            f.write("recording")
+                        # Tell Phyz to look at the microphone
+                        PhyzShared.set_listening_status(True)
                         for f, s in ring_buffer:
                             voiced_frames.append(f)
                         ring_buffer.clear()
@@ -77,8 +84,8 @@ audio captured so far (which may be empty) is returned.
                     #Bahadir: original threshold was 0.95
                     if num_unvoiced > 0.99 * ring_buffer.maxlen:
                         print("Silence detected, stopping recording.")
-                        #write into file to tell phyz to look away from mic
-                        open("transcribe_status.txt", "w", encoding="utf-8").close()
+                        # Tell Phyz to look away from the microphone
+                        PhyzShared.set_listening_status(False)
                         break
             except Exception as e:
                 print(f"[Stream read error] {e}")
@@ -87,6 +94,8 @@ audio captured so far (which may be empty) is returned.
     finally:
         stream.stop()
         stream.close()
+        # Ensure listening status is cleared
+        PhyzShared.set_listening_status(False)
 
     return b''.join(voiced_frames)
 
