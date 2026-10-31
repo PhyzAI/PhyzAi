@@ -53,7 +53,7 @@ def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=
         stream.start()
         print("Listening for speech...")
         if LISTENING_BEEP_ENABLE:
-            winsound.Beep(800, BEEP_DURATION)  # Beep to indicate that listening has started
+            winsound.Beep(random.randint(700, 900), BEEP_DURATION)  # Beep to indicate that listening has started
 
         while True:
             # check timeout at top of loop so we don't hang forever
@@ -105,7 +105,7 @@ def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=
         # Ensure listening status is cleared
         PhyzShared.set_listening_status(False)
         if NOT_LISTENING_BEEP_ENABLE:
-            winsound.Beep(400, BEEP_DURATION)  # Beep to indicate that listening has stopped
+            winsound.Beep(random.randint(300, 400), BEEP_DURATION)  # Beep to indicate that listening has stopped
 
     return b''.join(voiced_frames)
 
