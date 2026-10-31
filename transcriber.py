@@ -11,6 +11,12 @@ import collections
 
 import PhyzShared
 
+
+LISTENING_BEEP_ENABLE = True  # Set to True to enable the listening beep, False to disable it
+NOT_LISTENING_BEEP_ENABLE = True  # Set to True to enable the not listening beep, False to disable it
+BEEP_DURATION = 250  # Duration of the beep in milliseconds
+
+
 #Bahadir: original vad_aggressiveness was 2
 def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=0.8, vad_aggressiveness=3, timeout=None):
     """
@@ -37,15 +43,17 @@ def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=
     triggered = False
     voiced_frames = []
 
-    frequency = random.randint(400, 1000) # Set Frequency
-    duration = 300 # Set Duration To 1000 ms == 1 second
-    winsound.Beep(frequency, duration)
+    #frequency = random.randint(500, 800) # Set Frequency
+    #duration = 300 # Set Duration To 1000 ms == 1 second
+    #winsound.Beep(frequency, duration)
     stream = sd.InputStream(samplerate=sample_rate, channels=1, dtype='int16')
     start_time = time.time()
 
     try:
         stream.start()
         print("Listening for speech...")
+        if LISTENING_BEEP_ENABLE:
+            winsound.Beep(800, BEEP_DURATION)  # Beep to indicate that listening has started
 
         while True:
             # check timeout at top of loop so we don't hang forever
@@ -96,6 +104,8 @@ def record_until_silence(sample_rate=16000, frame_duration=30, padding_duration=
         stream.close()
         # Ensure listening status is cleared
         PhyzShared.set_listening_status(False)
+        if NOT_LISTENING_BEEP_ENABLE:
+            winsound.Beep(400, BEEP_DURATION)  # Beep to indicate that listening has stopped
 
     return b''.join(voiced_frames)
 
