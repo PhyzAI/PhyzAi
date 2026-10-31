@@ -46,10 +46,10 @@ def _execute_speech(text: str, useSpeakRobot: bool):
 def speak(text: str, useSpeakRobot: bool = False):
     if DONT_SPEAK_IF_LISTENING:
         for _ in range(DONT_SPEAK_RETRIES):
-            if not PhyzShared.get_listening_status():
+            if not PhyzShared.check_if_listening():
                 break
             time.sleep(DONT_SPEAK_RETRY_DELAY)
 
-        if PhyzShared.get_listening_status():
+        if PhyzShared.check_if_listening():
             return
     _execute_speech(text, useSpeakRobot=USE_SPEAK_ROBOT)
